@@ -15,7 +15,7 @@ This repository is built to be **clean, modular, extendable**, and easy to integ
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 QPSK-Wireless-Link-Simulator/
@@ -29,7 +29,7 @@ QPSK-Wireless-Link-Simulator/
 
 ---
 
-## 🚀 Features
+## Features
 
 ✔ Fully functional QPSK modem (mod/demod)
 ✔ RRC pulse shaping + matched filter
@@ -42,7 +42,7 @@ QPSK-Wireless-Link-Simulator/
 
 ---
 
-## 🧠 Theory Summary
+## Theory Summary
 
 ### QPSK Symbol Mapping (Gray Code)
 
@@ -91,7 +91,7 @@ h = \frac{X + jY}{\sqrt{2}}, \quad X, Y \sim \mathcal{N}(0,1)
 
 ---
 
-## 🛠 Installation
+## Installation
 
 ### 1. Clone the repository
 
@@ -108,7 +108,7 @@ pip install -r requirements.txt
 
 ---
 
-## ▶️ Running the Simulator
+## Running the Simulator
 
 ### Run the BER simulation + plots
 
@@ -124,7 +124,7 @@ This will:
 
 ---
 
-## 📊 Example Outputs
+## Example Outputs
 
 ### BER Curve
 
@@ -138,7 +138,7 @@ This will:
 
 ---
 
-## 🧩 Extending the Project
+## Extending the Project
 
 Here are suggested enhancements:
 
@@ -149,14 +149,14 @@ Here are suggested enhancements:
 * Automatic Gain Control (AGC)
 * Phase-locked loop (PLL) for phase correction
 
-### 📡 RF/Wireless Extensions
+### RF/Wireless Extensions
 
 * Rician fading
 * Frequency-selective multipath
 * OFDM modulation/demodulation
 * MIMO (2×2 Alamouti)
 
-### 🤖 AI/ML Extensions
+### AI/ML Extensions
 
 * ML-based channel prediction
 * Neural equalization
@@ -164,7 +164,7 @@ Here are suggested enhancements:
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to modify.
 
@@ -176,19 +176,19 @@ Recommended additions:
 
 ---
 
-## 📄 License
+## License
 
 This project is open-source under the MIT License.
 
 ---
 
-## 🖥️ GitHub CLI Workflow (Update Your Repository)
+## GitHub CLI Workflow (Update Your Repository)
 
 Below are the essential **Git + GitHub CLI commands** you will use to update this project.
 
 ---
 
-### 🔄 1. Pull Latest Changes (Always Do This First)
+### 1. Pull Latest Changes (Always Do This First)
 
 ```
 git pull --rebase origin main
@@ -196,7 +196,7 @@ git pull --rebase origin main
 
 ---
 
-### ✏️ 2. After Editing Code — Stage Changes
+### 2. After Editing Code — Stage Changes
 
 ```
 git add .
@@ -210,7 +210,7 @@ git add main.py
 
 ---
 
-### 💾 3. Commit Your Changes
+### 3. Commit Your Changes
 
 ```
 git commit -m "Describe your update here"
@@ -218,7 +218,7 @@ git commit -m "Describe your update here"
 
 ---
 
-### ⬆️ 4. Push Changes to GitHub
+### 4. Push Changes to GitHub
 
 ```
 git push origin main
@@ -226,7 +226,7 @@ git push origin main
 
 ---
 
-### 🆕 5. If You Created New Code Locally and Repo Was Not Connected
+### 5. If You Created New Code Locally and Repo Was Not Connected
 
 Add GitHub remote:
 
@@ -248,7 +248,7 @@ git push -u origin main
 
 ---
 
-### 🛠️ 6. Fix Common Error: Uncommitted Work Stopping Pull
+### 6. Fix Common Error: Uncommitted Work Stopping Pull
 
 ```
 git add .
@@ -258,7 +258,7 @@ git pull --rebase origin main
 
 ---
 
-## 📬 Contact
+## Contact
 
 **Author:** Obinna Edeh
 **GitHub:** [https://github.com/obiedeh](https://github.com/obiedeh)
@@ -267,4 +267,4 @@ For enhancements or requests, feel free to open an issue in the repository.
 
 ---
 
-### ⭐ If you find this useful, star the repo on GitHub!
+### If you find this useful, star the repo on GitHub!
