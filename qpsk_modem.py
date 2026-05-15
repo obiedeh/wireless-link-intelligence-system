@@ -38,17 +38,13 @@ def qpsk_to_bits(symbols: np.ndarray) -> np.ndarray:
     symbols = np.asarray(symbols)
     bits_out = []
     for s in symbols:
-        # Decide quadrant
-        b0 = 0 if s.real >= 0 else 1
-        b1 = 0 if s.imag >= 0 else 1
-        # This matches the mapping inverse above
-        if (b0, b1) == (0, 0):
+        if s.real >= 0 and s.imag >= 0:
             bits_out.extend([0, 0])
-        elif (b0, b1) == (0, 1):
+        elif s.real < 0 and s.imag >= 0:
             bits_out.extend([0, 1])
-        elif (b0, b1) == (1, 1):
+        elif s.real < 0 and s.imag < 0:
             bits_out.extend([1, 1])
-        else:  # (1, 0)
+        else:
             bits_out.extend([1, 0])
     return np.array(bits_out, dtype=int)
 
@@ -103,15 +99,15 @@ def qpsk_modulate(bits: np.ndarray, sps: int = 8, beta: float = 0.35):
     tx_signal = upfirdn(h_rrc, syms, up=sps)
     return tx_signal, syms, h_rrc
 
-def qpsk_demodulate(rx_signal: np.ndarray,
-                    h_rrc: np.ndarray,
-                    sps: int,
-                    num_syms: int,
-                    channel_coef: complex = 1.0) -> np.ndarray:
+def recover_qpsk_symbols(rx_signal: np.ndarray,
+                         h_rrc: np.ndarray,
+                         sps: int,
+                         num_syms: int,
+                         channel_coef: complex = 1.0) -> np.ndarray:
     """
-    Matched filter + downsample + equalize + hard-decision demap.
+    Matched filter + downsample + scalar equalization.
 
-    Returns recovered bits.
+    Returns recovered QPSK symbols before hard-decision demapping.
     """
     # Matched filter (time-reversed conjugate)
     rx_filt = np.convolve(rx_signal, h_rrc[::-1].conj(), mode="same")
@@ -122,6 +118,24 @@ def qpsk_demodulate(rx_signal: np.ndarray,
 
     # Equalize flat fading (scalar divide)
     rx_syms_eq = rx_syms / channel_coef
+    return rx_syms_eq
 
+def qpsk_demodulate(rx_signal: np.ndarray,
+                    h_rrc: np.ndarray,
+                    sps: int,
+                    num_syms: int,
+                    channel_coef: complex = 1.0) -> np.ndarray:
+    """
+    Matched filter + downsample + equalize + hard-decision demap.
+
+    Returns recovered bits.
+    """
+    rx_syms_eq = recover_qpsk_symbols(
+        rx_signal=rx_signal,
+        h_rrc=h_rrc,
+        sps=sps,
+        num_syms=num_syms,
+        channel_coef=channel_coef,
+    )
     bits_hat = qpsk_to_bits(rx_syms_eq)
     return bits_hat

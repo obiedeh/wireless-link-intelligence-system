@@ -1,12 +1,12 @@
 # QPSK Wireless Link Simulator
 
-Wireless link simulation foundation for AI-RAN, edge communications, and physical-layer experimentation.
+Classical QPSK wireless link simulation with an AI-assisted link-estimation extension for edge communications experiments.
 
-This repository implements a modular Python simulation of a baseband QPSK digital communication link. It is designed as a clean wireless systems foundation that can later support AI-native RAN experiments, learned receivers, channel-aware inference, and edge communication studies.
+This repository implements a modular Python simulation of a baseband QPSK digital communication link. The classical simulator remains the baseline, and the added ML workflow estimates link conditions from synthetic constellation statistics.
 
-The goal is not to present QPSK as a novel technique.
+The goal is not to present QPSK as a novel technique or to claim a production telecom receiver.
 
-The goal is to build a reproducible signal-processing testbed for understanding wireless link behavior under noise, fading, and future AI-assisted receiver workflows.
+The goal is to build a reproducible signal-processing testbed for understanding wireless link behavior under noise, fading, and edge AI-assisted link estimation.
 
 ---
 
@@ -39,6 +39,12 @@ This repository provides that foundational wireless simulation layer.
 - hard-decision demodulation
 - BER vs SNR simulation
 - constellation visualization
+- synthetic link-condition dataset generation
+- ML-based SNR estimation
+- ML-based BER prediction
+- AWGN vs Rayleigh channel classification
+- synthetic link-quality scoring
+- ONNX export path and Jetson benchmark template
 
 ---
 
@@ -74,10 +80,17 @@ BER / Constellation Analysis
 
 ```text
 .
-├── main.py              # Entry point for BER simulation and plots
-├── qpsk_modem.py        # Modulation, demodulation, and RRC filtering
-├── channel.py           # AWGN and Rayleigh fading models
-├── plots.py             # BER and constellation visualization helpers
+├── run_sim.py                    # Classical BER simulation entry point
+├── qpsk_modem.py                 # Modulation, demodulation, and RRC filtering
+├── channel.py                    # AWGN and Rayleigh fading models
+├── plots.py                      # BER and constellation visualization helpers
+├── ai_link_estimation/           # Dataset, features, training, and ONNX export
+├── generate_dataset.py           # Synthetic link-condition dataset CLI
+├── train_link_models.py          # Train SNR/BER/channel/quality models
+├── export_onnx.py                # Export trained estimators to ONNX
+├── edge/jetson_benchmark_template.py
+├── reports/link_estimation_report.md
+├── reports/edge_inference_plan.md
 ├── requirements.txt
 └── README.md
 ```
@@ -92,7 +105,7 @@ cd qpsk-wireless-link-simulator
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
-python main.py
+python run_sim.py
 ```
 
 Windows PowerShell:
@@ -103,8 +116,67 @@ cd qpsk-wireless-link-simulator
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
-python main.py
+python run_sim.py
 ```
+
+---
+
+## AI-Assisted Link Estimation Workflow
+
+Generate synthetic link-condition data:
+
+```bash
+python generate_dataset.py --samples 500 --num-bits 4000
+```
+
+This creates `data/link_conditions.csv` with:
+
+- SNR
+- measured BER from the classical QPSK baseline
+- channel type
+- fading coefficient magnitude and phase
+- constellation statistics such as power, I/Q moments, EVM, phase spread, radius spread, and quadrant balance
+
+Train the estimators and produce the comparison report:
+
+```bash
+python train_link_models.py
+```
+
+The training step writes:
+
+- `models/snr_estimator.joblib`
+- `models/ber_predictor.joblib`
+- `models/channel_classifier.joblib`
+- `models/link_quality_scorer.joblib`
+- `models/metrics.json`
+- `reports/link_estimation_report.md`
+
+The report includes:
+
+- classical measured BER vs predicted BER
+- AWGN vs Rayleigh classification accuracy
+- SNR estimation error
+- link-quality scoring error
+
+---
+
+## Edge Deployment Path
+
+Export trained models to ONNX:
+
+```bash
+python -m pip install skl2onnx onnx onnxruntime
+python export_onnx.py
+```
+
+Benchmark an exported estimator on Jetson:
+
+```bash
+python edge/jetson_benchmark_template.py --model models/onnx/snr_estimator.onnx --runs 1000
+```
+
+See `reports/edge_inference_plan.md` for TensorRT-ready notes. The current ONNX path is a practical edge inference bridge for tabular estimators. For TensorRT acceleration, replace or distill the tree models into a small neural network and validate parity across Python, ONNX Runtime, and TensorRT.
 
 ---
 
@@ -138,11 +210,15 @@ Typical behavior:
 - OFDM
 - MIMO
 
-### AI-RAN Experiments
+### AI-Assisted Link Estimation Experiments
 
 - ML-based channel estimation
-- neural equalization
-- learned demodulation
+- BER prediction from constellation statistics
+- AWGN vs Rayleigh classification
+- SNR estimation
+- lightweight link-quality scoring
+- optional future neural equalization
+- optional future learned demodulation
 - channel-aware inference experiments
 - synthetic PHY-layer telemetry generation
 
@@ -159,12 +235,13 @@ Typical behavior:
 
 This repository supports a broader engineering focus around:
 
-- AI-RAN
+- edge AI-assisted wireless link estimation
 - wireless systems
 - edge AI infrastructure
 - physical-layer intelligence
 - signal-processing foundations
-- future 6G and AI-native network experimentation
+
+It is not a full AI-RAN base station, not a scheduler, not a standards-compliant modem, and not a production telecom receiver.
 
 ---
 
