@@ -1,270 +1,173 @@
-# QPSK-Wireless-Link-Simulator
+# QPSK Wireless Link Simulator
 
-A modular Python project that simulates a baseband **QPSK digital communication system** including:
+Wireless link simulation foundation for AI-RAN, edge communications, and physical-layer experimentation.
 
-* Bit generation
-* QPSK modulation (Gray-coded)
-* Root Raised Cosine (RRC) pulse shaping
-* AWGN and Rayleigh fading channels
-* Matched filtering + symbol timing
-* Hard-decision demodulation
-* BER performance evaluation
-* Constellation visualization
+This repository implements a modular Python simulation of a baseband QPSK digital communication link. It is designed as a clean wireless systems foundation that can later support AI-native RAN experiments, learned receivers, channel-aware inference, and edge communication studies.
 
-This repository is built to be **clean, modular, extendable**, and easy to integrate with additional wireless communication blocks.
+The goal is not to present QPSK as a novel technique.
+
+The goal is to build a reproducible signal-processing testbed for understanding wireless link behavior under noise, fading, and future AI-assisted receiver workflows.
 
 ---
 
-## Project Structure
+## Why This Matters
 
-```
-QPSK-Wireless-Link-Simulator/
-├── main.py                  # Entry point: runs BER sims, plots
-├── qpsk_modem.py            # Modulation/demodulation/RRC filter
-├── channel.py               # AWGN + Rayleigh fading models
-├── plots.py                 # Constellation + BER plotting helpers
-├── requirements.txt         # Python dependencies
-└── README.md                # Documentation (this file)
-```
+AI-RAN and edge AI systems depend on reliable wireless links, predictable channel behavior, and accurate interpretation of physical-layer performance.
 
----
+Before adding AI to the RAN stack, the underlying communication system must be measurable:
 
-## Features
+- modulation behavior
+- channel impairments
+- fading effects
+- BER vs SNR performance
+- constellation distortion
+- receiver recovery behavior
 
-✔ Fully functional QPSK modem (mod/demod)
-✔ RRC pulse shaping + matched filter
-✔ AWGN channel
-✔ Rayleigh fading channel
-✔ Symbol recovery and equalization
-✔ BER vs SNR simulation
-✔ Constellation plotting
-✔ Easily extendable to OFDM, MIMO, CFO, and coding
+This repository provides that foundational wireless simulation layer.
 
 ---
 
-## Theory Summary
+## Current Capabilities
 
-### QPSK Symbol Mapping (Gray Code)
-
-Two bits map to one complex symbol:
-
-| Bits | Symbol                      |
-| ---- | --------------------------- |
-| 00   | ( \frac{1 + j}{\sqrt{2}} )  |
-| 01   | ( \frac{-1 + j}{\sqrt{2}} ) |
-| 11   | ( \frac{-1 - j}{\sqrt{2}} ) |
-| 10   | ( \frac{1 - j}{\sqrt{2}} )  |
-
----
-
-### Root Raised Cosine Filter
-
-The RRC filter is used for:
-
-* Bandwidth control
-* Inter-symbol interference reduction
-* Optimal matched filtering
-
-Filter parameters:
-
-* Roll-off factor ( \beta = 0.35 )
-* Samples per symbol (SPS) = 8
-* Tap count = ( 8 \times \text{SPS} + 1 )
+- random bit generation
+- Gray-coded QPSK modulation
+- Root Raised Cosine pulse shaping
+- AWGN channel modeling
+- Rayleigh fading channel modeling
+- matched filtering
+- symbol timing path
+- hard-decision demodulation
+- BER vs SNR simulation
+- constellation visualization
 
 ---
 
-### Channel Models
+## Architecture
 
-#### 1. Additive White Gaussian Noise (AWGN)
-
-Noise added based on target SNR:
-[
-\text{SNR} = 10 \log_{10} \left( \frac{P_s}{P_n} \right)
-]
-
-#### 2. Rayleigh Fading
-
-Flat-fading coefficient:
-[
-h = \frac{X + jY}{\sqrt{2}}, \quad X, Y \sim \mathcal{N}(0,1)
-]
-
----
-
-## Installation
-
-### 1. Clone the repository
-
-```
-git clone https://github.com/obiedeh/QPSK-Wireless-Link-Simulator.git
-cd QPSK-Wireless-Link-Simulator
-```
-
-### 2. Install dependencies
-
-```
-pip install -r requirements.txt
+```text
+Random Bits
+    |
+    v
+QPSK Mapper
+    |
+    v
+Pulse Shaping
+(Root Raised Cosine)
+    |
+    v
+Wireless Channel
+(AWGN / Rayleigh)
+    |
+    v
+Matched Filter + Recovery
+    |
+    v
+QPSK Demapper
+    |
+    v
+BER / Constellation Analysis
 ```
 
 ---
 
-## Running the Simulator
+## Repository Structure
 
-### Run the BER simulation + plots
-
+```text
+.
+├── main.py              # Entry point for BER simulation and plots
+├── qpsk_modem.py        # Modulation, demodulation, and RRC filtering
+├── channel.py           # AWGN and Rayleigh fading models
+├── plots.py             # BER and constellation visualization helpers
+├── requirements.txt
+└── README.md
 ```
+
+---
+
+## Quick Start
+
+```bash
+git clone https://github.com/obiedeh/qpsk-wireless-link-simulator.git
+cd qpsk-wireless-link-simulator
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 python main.py
 ```
 
-This will:
+Windows PowerShell:
 
-* Generate BER vs SNR curves (AWGN & Rayleigh)
-* Plot constellations
-* Print performance summary
+```powershell
+git clone https://github.com/obiedeh/qpsk-wireless-link-simulator.git
+cd qpsk-wireless-link-simulator
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python main.py
+```
 
 ---
 
 ## Example Outputs
 
-### BER Curve
+Expected simulation outputs include:
 
-* AWGN curve drops ~10⁻³ at 10 dB
-* Rayleigh curve is much worse (fading penalty)
+- BER vs SNR curve for AWGN and Rayleigh channels
+- constellation plots under different channel conditions
+- printed simulation summary
 
-### Constellation
+Typical behavior:
 
-* Perfect 4-point square at high SNR
-* Scatter expands at low SNR
-
----
-
-## Extending the Project
-
-Here are suggested enhancements:
-
-### 🔧 PHY Layer Enhancements
-
-* Carrier frequency offset (CFO)
-* Symbol timing synchronization
-* Automatic Gain Control (AGC)
-* Phase-locked loop (PLL) for phase correction
-
-### RF/Wireless Extensions
-
-* Rician fading
-* Frequency-selective multipath
-* OFDM modulation/demodulation
-* MIMO (2×2 Alamouti)
-
-### AI/ML Extensions
-
-* ML-based channel prediction
-* Neural equalization
-* Learned demodulators
+- AWGN BER improves sharply as SNR increases
+- Rayleigh fading shows a significant performance penalty
+- low-SNR constellations spread and overlap
+- high-SNR constellations converge toward the ideal four-symbol pattern
 
 ---
 
-## Contributing
+## Engineering Extensions
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to modify.
+### Wireless Systems
 
-Recommended additions:
+- carrier frequency offset
+- timing synchronization
+- AGC
+- phase correction
+- Rician fading
+- frequency-selective multipath
+- OFDM
+- MIMO
 
-* unit tests
-* benchmarking scripts
-* Jupyter demos
+### AI-RAN Experiments
+
+- ML-based channel estimation
+- neural equalization
+- learned demodulation
+- channel-aware inference experiments
+- synthetic PHY-layer telemetry generation
+
+### Edge AI Integration
+
+- lightweight inference benchmarks
+- signal-processing acceleration experiments
+- Jetson-based simulation or receiver workflows
+- telemetry export for AI-RAN analytics
+
+---
+
+## Positioning
+
+This repository supports a broader engineering focus around:
+
+- AI-RAN
+- wireless systems
+- edge AI infrastructure
+- physical-layer intelligence
+- signal-processing foundations
+- future 6G and AI-native network experimentation
 
 ---
 
 ## License
 
-This project is open-source under the MIT License.
-
----
-
-## GitHub CLI Workflow (Update Your Repository)
-
-Below are the essential **Git + GitHub CLI commands** you will use to update this project.
-
----
-
-### 1. Pull Latest Changes (Always Do This First)
-
-```
-git pull --rebase origin main
-```
-
----
-
-### 2. After Editing Code — Stage Changes
-
-```
-git add .
-```
-
-Or stage a single file:
-
-```
-git add main.py
-```
-
----
-
-### 3. Commit Your Changes
-
-```
-git commit -m "Describe your update here"
-```
-
----
-
-### 4. Push Changes to GitHub
-
-```
-git push origin main
-```
-
----
-
-### 5. If You Created New Code Locally and Repo Was Not Connected
-
-Add GitHub remote:
-
-```
-git remote add origin git@github.com:obiedeh/QPSK-Wireless-Link-Simulator.git
-```
-
-Rename branch to main:
-
-```
-git branch -M main
-```
-
-Push initial code:
-
-```
-git push -u origin main
-```
-
----
-
-### 6. Fix Common Error: Uncommitted Work Stopping Pull
-
-```
-git add .
-git commit -m "Save work"
-git pull --rebase origin main
-```
-
----
-
-## Contact
-
-**Author:** Obinna Edeh
-**GitHub:** [https://github.com/obiedeh](https://github.com/obiedeh)
-
-For enhancements or requests, feel free to open an issue in the repository.
-
----
-
-### If you find this useful, star the repo on GitHub!
+MIT License.
