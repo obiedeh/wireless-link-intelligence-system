@@ -20,6 +20,8 @@ LABEL_COLUMNS = [
     "channel_type",
     "channel_is_rayleigh",
     "link_quality_score",
+    "fading_abs",
+    "fading_phase",
 ]
 
 CSV_COLUMNS = ["sample_id", *LABEL_COLUMNS, *FEATURE_COLUMNS]
