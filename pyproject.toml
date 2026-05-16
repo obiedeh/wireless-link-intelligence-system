@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "qpsk-wireless-link-simulator"
+version = "0.1.0"
+description = "Classical QPSK baseband simulator with AI-assisted link estimation"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "matplotlib>=3.7",
+    "scikit-learn>=1.3",
+    "joblib>=1.3",
+]
+
+[project.optional-dependencies]
+notebook = ["jupyter>=1.0"]
+edge = ["skl2onnx", "onnx", "onnxruntime"]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+run-sim = "run_sim:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

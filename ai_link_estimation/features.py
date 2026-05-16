@@ -18,8 +18,6 @@ FEATURE_COLUMNS = [
     "phase_std",
     "evm_rms",
     "quadrant_balance",
-    "fading_abs",
-    "fading_phase",
 ]
 
 
