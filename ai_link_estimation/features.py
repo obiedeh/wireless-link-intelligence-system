@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import numpy as np
 
-
 FEATURE_COLUMNS = [
     "rx_power_mean",
     "rx_power_std",

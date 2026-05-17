@@ -3,10 +3,10 @@ import pytest
 
 from qpsk_modem import (
     bits_to_qpsk,
+    qpsk_demodulate,
+    qpsk_modulate,
     qpsk_to_bits,
     rrc_filter,
-    qpsk_modulate,
-    qpsk_demodulate,
 )
 
 

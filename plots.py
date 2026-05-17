@@ -1,5 +1,6 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+
 
 def plot_constellation(tx_syms, rx_syms=None, title="QPSK Constellation"):
     tx_syms = np.asarray(tx_syms)

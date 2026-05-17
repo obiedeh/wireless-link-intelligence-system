@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def add_awgn(signal: np.ndarray, snr_db: float) -> np.ndarray:
     """
     Add complex AWGN to signal for a given SNR (dB).

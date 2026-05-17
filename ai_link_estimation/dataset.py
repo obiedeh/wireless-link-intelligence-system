@@ -13,7 +13,6 @@ from qpsk_modem import qpsk_demodulate, qpsk_modulate, recover_qpsk_symbols
 
 from .features import FEATURE_COLUMNS, constellation_statistics, link_quality_score
 
-
 LABEL_COLUMNS = [
     "snr_db",
     "ber",
