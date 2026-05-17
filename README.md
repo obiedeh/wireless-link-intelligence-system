@@ -192,6 +192,8 @@ python edge/jetson_benchmark_template.py --model models/onnx/snr_estimator.onnx 
 
 See `reports/edge_inference_plan.md` for TensorRT-ready notes. The current ONNX path is a practical edge inference bridge for tabular estimators. For TensorRT acceleration, replace or distill the tree models into a small neural network and validate parity across Python, ONNX Runtime, and TensorRT.
 
+For the reviewer-facing deliverables checklist, see [PORTFOLIO_DELIVERABLES.md](PORTFOLIO_DELIVERABLES.md).
+
 ---
 
 ## Example Outputs
