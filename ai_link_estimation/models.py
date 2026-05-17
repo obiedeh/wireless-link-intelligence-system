@@ -173,6 +173,17 @@ def write_comparison_report(metrics: dict[str, Any],
             f"{item['predicted_snr_db']:.2f} | {item['predicted_channel']} |"
         )
 
+    if channel["accuracy"] < 0.65:
+        classifier_note = (
+            "- The channel classifier is weak in this run. Treat that as a useful negative result: "
+            "the current feature set supports SNR/BER estimation better than channel-type recognition."
+        )
+    else:
+        classifier_note = (
+            "- The channel classifier is above the simple baseline in this controlled two-class run, "
+            "but still needs validation against real RF captures."
+        )
+
     lines.extend([
         "",
         "## Interpretation",
@@ -180,6 +191,7 @@ def write_comparison_report(metrics: dict[str, Any],
         "- The measured BER remains the classical simulator baseline.",
         "- ML predictions are estimates from synthetic features and should be validated against any real RF capture before use.",
         "- AWGN/Rayleigh classification is a controlled two-class experiment, not generalized channel recognition.",
+        classifier_note,
         "- SNR error is reported on held-out synthetic samples and should not be treated as field performance.",
     ])
     output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -191,12 +203,17 @@ def main() -> None:
     parser.add_argument("--dataset", default="data/link_conditions.csv")
     parser.add_argument("--output-dir", default="models")
     parser.add_argument("--report", default="reports/link_estimation_report.md")
+    parser.add_argument("--metrics-report", default="reports/link_estimation_metrics.json")
     args = parser.parse_args()
 
     metrics = train_models(csv_path=args.dataset, output_dir=args.output_dir)
     report_path = write_comparison_report(metrics, output_path=args.report)
+    metrics_report_path = Path(args.metrics_report)
+    metrics_report_path.parent.mkdir(parents=True, exist_ok=True)
+    metrics_report_path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     print(json.dumps(metrics["models"], indent=2))
     print(f"Wrote comparison report: {report_path}")
+    print(f"Wrote metrics report: {metrics_report_path}")
 
 
 if __name__ == "__main__":

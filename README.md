@@ -110,6 +110,13 @@ python -m pip install -r requirements.txt
 python run_sim.py
 ```
 
+For the full Linux verification path:
+
+```bash
+make install-dev
+make verify
+```
+
 Windows PowerShell:
 
 ```powershell
@@ -153,6 +160,9 @@ The training step writes:
 - `models/link_quality_scorer.joblib`
 - `models/metrics.json`
 - `reports/link_estimation_report.md`
+- `reports/link_estimation_metrics.json`
+
+CI validates this path with a smaller deterministic dataset so the repository proves tests, simulation, dataset generation, training, and evidence artifact creation on Ubuntu.
 
 The report includes:
 
@@ -191,6 +201,7 @@ Expected simulation outputs include:
 - BER vs SNR curve for AWGN and Rayleigh channels
 - constellation plots under different channel conditions
 - printed simulation summary
+- optional committed smoke artifacts: `reports/ber_smoke_awgn.csv` and `reports/ber_smoke_awgn.svg`
 
 Typical behavior:
 
