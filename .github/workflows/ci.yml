@@ -41,3 +41,20 @@ jobs:
 
       - name: Run tests
         run: python -m pytest -q
+
+      - name: Run BER smoke simulation
+        run: python run_sim.py --num-bits 1000 --snr-min 0 --snr-max 6 --snr-step 3 --seed 7 --output-csv reports/ber_smoke_awgn.csv --output-plot reports/ber_smoke_awgn.svg
+
+      - name: Generate evidence dataset
+        run: python generate_dataset.py --output data/link_conditions.csv --samples 60 --num-bits 800 --seed 7
+
+      - name: Train link estimators
+        run: python train_link_models.py --dataset data/link_conditions.csv --output-dir models --report reports/link_estimation_report.md --metrics-report reports/link_estimation_metrics.json
+
+      - name: Validate evidence artifacts
+        run: |
+          test -s reports/ber_smoke_awgn.csv
+          test -s reports/ber_smoke_awgn.svg
+          test -s reports/link_estimation_report.md
+          test -s reports/link_estimation_metrics.json
+          test -s models/metrics.json

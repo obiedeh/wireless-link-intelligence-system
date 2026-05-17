@@ -23,6 +23,21 @@ dev = ["pytest>=7.0", "ruff"]
 [project.scripts]
 run-sim = "run_sim:main"
 
+[tool.setuptools]
+py-modules = [
+    "channel",
+    "export_onnx",
+    "generate_dataset",
+    "plots",
+    "qpsk_modem",
+    "run_sim",
+    "train_link_models",
+]
+
+[tool.setuptools.packages.find]
+include = ["ai_link_estimation*"]
+exclude = ["reports*", "tests*", "edge*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
