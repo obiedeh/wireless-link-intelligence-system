@@ -16,7 +16,6 @@ from sklearn.model_selection import train_test_split
 
 from .features import FEATURE_COLUMNS
 
-
 MODEL_SPECS = {
     "snr_estimator": "snr_db",
     "ber_predictor": "ber",

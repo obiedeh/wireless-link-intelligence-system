@@ -3,6 +3,7 @@
 import numpy as np
 from scipy.signal import upfirdn
 
+
 def bits_to_qpsk(bits: np.ndarray) -> np.ndarray:
     """
     Map bits (0/1) to normalized QPSK symbols using Gray coding.

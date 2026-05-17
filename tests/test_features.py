@@ -7,8 +7,12 @@ import pytest
 # Ensure project root is on path so bare imports (channel, qpsk_modem) resolve
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from ai_link_estimation.features import FEATURE_COLUMNS, constellation_statistics, link_quality_score
-from ai_link_estimation.dataset import simulate_link_sample, CSV_COLUMNS
+from ai_link_estimation.dataset import CSV_COLUMNS, simulate_link_sample
+from ai_link_estimation.features import (
+    FEATURE_COLUMNS,
+    constellation_statistics,
+    link_quality_score,
+)
 
 
 def _make_symbols(n=100, snr_linear=100.0, rng=None):
