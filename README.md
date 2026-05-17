@@ -99,6 +99,8 @@ BER / Constellation Analysis
 
 ## Quick Start
 
+Primary target: Linux. The core simulator runs on standard CPU Python. Jetson usage is limited to the optional ONNX Runtime benchmark path after models are exported.
+
 ```bash
 git clone https://github.com/obiedeh/qpsk-wireless-link-simulator.git
 cd qpsk-wireless-link-simulator
@@ -163,10 +165,12 @@ The report includes:
 
 ## Edge Deployment Path
 
+This is an edge benchmark path, not a claim of TensorRT-validated production deployment. Use it to generate measurable latency evidence on Jetson hardware.
+
 Export trained models to ONNX:
 
 ```bash
-python -m pip install skl2onnx onnx onnxruntime
+python -m pip install ".[edge]"
 python export_onnx.py
 ```
 
