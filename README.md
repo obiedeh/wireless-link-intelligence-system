@@ -60,10 +60,13 @@ Source: [`reports/link_estimation_metrics.json`](reports/link_estimation_metrics
 | Link-quality scorer — MAE / R² | 4.089 / 0.904 | measured |
 | AWGN BER smoke (2000 bits) | 0.0025 @ 0 dB; 0.0 @ 2–20 dB | measured ([reports/ber_smoke_awgn.csv](reports/ber_smoke_awgn.csv)) — coarse, hits resolution floor above 0 dB |
 | AWGN BER full sweep (1e6 bits) | 2.42e-3 @ 0 dB · 1.83e-4 @ 2 dB · 5.0e-6 @ 4 dB · 0 @ 6–20 dB (below 1e-6 sim floor) | measured ([reports/ber_full_awgn.csv](reports/ber_full_awgn.csv)) — run via `make run-sim-full` |
-| Rayleigh BER smoke | `<TO MEASURE>` | Plan: add a `make run-sim-rayleigh` target that calls `run_sim.py --fading --output-csv reports/ber_smoke_rayleigh.csv`, commit the artifact. |
+| Rayleigh BER smoke (2000 bits, single fading realization, seed=7) | 2.5e-3 @ 0 dB · 0 @ 2–20 dB | measured ([reports/ber_smoke_rayleigh.csv](reports/ber_smoke_rayleigh.csv)) — run via `make run-sim-rayleigh`. **Single-realization caveat — see note below** |
+| Ensemble-averaged Rayleigh BER curve | `<TO MEASURE>` | Plan: extend the BER sweep to average over N independent fading realizations per SNR point (e.g., N=200 with `--num-bits 10000` each). The current single-realization smoke under-represents fade-driven BER because perfect CSI demodulation lets a lucky `|h|²` mask average performance. |
 | Jetson ONNX inference latency (p50/p95/p99) | `<TO MEASURE>` | Plan: run `edge/jetson_benchmark_template.py` on Jetson when hardware lands; capture mean latency and inferences/sec into `reports/jetson_inference_benchmark.json`. |
 
 The channel classifier scoring 0.472 on a two-class problem is a useful negative result, not noise to hide: the current 12-feature set supports SNR/BER estimation much better than channel-type recognition. See [`reports/link_estimation_report.md`](reports/link_estimation_report.md) for the full interpretation.
+
+The Rayleigh smoke row is a **single-realization** result: `channel.rayleigh_fading` draws one complex-Gaussian `h` per simulation call, and the QPSK demodulator receives that `h` as perfect channel-state information. With seed=7, the SNR 0 dB call drew an `h` that produces measurable error; subsequent SNR points drew `|h|²` values where perfect-CSI compensation pushes BER below the 2000-bit resolution floor. This is honest evidence that the pipeline runs end-to-end, but it is **not** an ensemble-averaged Rayleigh curve — the ensemble-averaged row above is the right comparison against the AWGN sweep and is explicitly tagged `<TO MEASURE>`.
 
 Reproduce locally:
 
