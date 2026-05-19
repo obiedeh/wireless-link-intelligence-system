@@ -10,6 +10,23 @@ The goal is to build a reproducible signal-processing testbed for understanding 
 
 ---
 
+## Core Stack
+
+**Implemented:** Python · NumPy · SciPy · scikit-learn · matplotlib · ONNX export · BER analysis
+
+**Planned / integration path:** Jetson latency benchmarks · TensorRT acceleration · neural equalization
+
+<p>
+  <img src="https://img.shields.io/badge/Python-3.11+-blue" alt="Python" />
+  <img src="https://img.shields.io/badge/NumPy-numerics-013243" alt="NumPy" />
+  <img src="https://img.shields.io/badge/SciPy-signal%20processing-8CAAE6" alt="SciPy" />
+  <img src="https://img.shields.io/badge/scikit--learn-ML%20estimators-F7931E" alt="scikit-learn" />
+  <img src="https://img.shields.io/badge/ONNX-edge%20export-005CED" alt="ONNX" />
+  <img src="https://img.shields.io/badge/Jetson-benchmark%20path-76B900" alt="Jetson benchmark path" />
+</p>
+
+---
+
 ## Why This Matters
 
 AI-RAN and edge AI systems depend on reliable wireless links, predictable channel behavior, and accurate interpretation of physical-layer performance.
