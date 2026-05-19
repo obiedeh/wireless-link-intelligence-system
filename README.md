@@ -48,6 +48,34 @@ This repository provides that foundational wireless simulation layer.
 
 ---
 
+## Measured Metrics
+
+Source: [`reports/link_estimation_metrics.json`](reports/link_estimation_metrics.json) (mirror at [`models/metrics.json`](models/metrics.json)). Dataset: synthetic link-condition CSV with 500 samples, 125-sample stratified holdout, 12 constellation-statistic features.
+
+| Metric | Value | Status |
+| --- | ---: | --- |
+| SNR estimator — MAE / R² | 0.118 dB / 0.999 | measured |
+| BER predictor — MAE / R² | 0.000453 / 0.968 | measured |
+| Channel classifier — accuracy | 0.472 | measured (honest weak result — see [Interpretation](reports/link_estimation_report.md)) |
+| Link-quality scorer — MAE / R² | 4.089 / 0.904 | measured |
+| AWGN BER smoke (2000 bits) | 0.0025 @ 0 dB; 0.0 @ 2–20 dB | measured ([reports/ber_smoke_awgn.csv](reports/ber_smoke_awgn.csv)) |
+| Higher-resolution AWGN BER curve (≥1e6 bits) | `<TO MEASURE>` | Plan: rerun `make run-sim` with `--num-bits 1000000` to resolve BER below 1e-4; write `reports/ber_full_awgn.csv`. |
+| Rayleigh BER smoke | `<TO MEASURE>` | Plan: add a `make run-sim-rayleigh` target that calls `run_sim.py --fading --output-csv reports/ber_smoke_rayleigh.csv`, commit the artifact. |
+| Jetson ONNX inference latency (p50/p95/p99) | `<TO MEASURE>` | Plan: run `edge/jetson_benchmark_template.py` on Jetson when hardware lands; capture mean latency and inferences/sec into `reports/jetson_inference_benchmark.json`. |
+
+The channel classifier scoring 0.472 on a two-class problem is a useful negative result, not noise to hide: the current 12-feature set supports SNR/BER estimation much better than channel-type recognition. See [`reports/link_estimation_report.md`](reports/link_estimation_report.md) for the full interpretation.
+
+Reproduce locally:
+
+```bash
+make install-dev
+make generate-evidence
+make train-evidence
+cat reports/link_estimation_metrics.json
+```
+
+---
+
 ## Architecture
 
 ```text
@@ -152,15 +180,17 @@ Train the estimators and produce the comparison report:
 python train_link_models.py
 ```
 
-The training step writes:
+The training step writes the following artifacts:
 
-- `models/snr_estimator.joblib`
-- `models/ber_predictor.joblib`
-- `models/channel_classifier.joblib`
-- `models/link_quality_scorer.joblib`
-- `models/metrics.json`
-- `reports/link_estimation_report.md`
-- `reports/link_estimation_metrics.json`
+| Artifact | What it tells you |
+| --- | --- |
+| `models/snr_estimator.joblib` | Trained SNR estimator (regression: constellation statistics → SNR in dB). |
+| `models/ber_predictor.joblib` | Trained BER predictor (regression: constellation statistics → measured BER). |
+| `models/channel_classifier.joblib` | Trained channel classifier (AWGN vs Rayleigh; currently weak — see [Measured Metrics](#measured-metrics)). |
+| `models/link_quality_scorer.joblib` | Trained link-quality scorer (regression: constellation statistics → synthetic 0–100 quality score). |
+| `models/metrics.json` | Machine-readable holdout metrics and example predictions for all four estimators. |
+| `reports/link_estimation_report.md` | Human-readable comparison report with example rows and interpretation. |
+| `reports/link_estimation_metrics.json` | Mirror of `models/metrics.json` under `reports/` for the proof-artifact pattern. |
 
 CI validates this path with a smaller deterministic dataset so the repository proves tests, simulation, dataset generation, training, and evidence artifact creation on Ubuntu.
 
