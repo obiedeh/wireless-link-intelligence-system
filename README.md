@@ -58,8 +58,8 @@ Source: [`reports/link_estimation_metrics.json`](reports/link_estimation_metrics
 | BER predictor — MAE / R² | 0.000453 / 0.968 | measured |
 | Channel classifier — accuracy | 0.472 | measured (honest weak result — see [Interpretation](reports/link_estimation_report.md)) |
 | Link-quality scorer — MAE / R² | 4.089 / 0.904 | measured |
-| AWGN BER smoke (2000 bits) | 0.0025 @ 0 dB; 0.0 @ 2–20 dB | measured ([reports/ber_smoke_awgn.csv](reports/ber_smoke_awgn.csv)) |
-| Higher-resolution AWGN BER curve (≥1e6 bits) | `<TO MEASURE>` | Plan: rerun `make run-sim` with `--num-bits 1000000` to resolve BER below 1e-4; write `reports/ber_full_awgn.csv`. |
+| AWGN BER smoke (2000 bits) | 0.0025 @ 0 dB; 0.0 @ 2–20 dB | measured ([reports/ber_smoke_awgn.csv](reports/ber_smoke_awgn.csv)) — coarse, hits resolution floor above 0 dB |
+| AWGN BER full sweep (1e6 bits) | 2.42e-3 @ 0 dB · 1.83e-4 @ 2 dB · 5.0e-6 @ 4 dB · 0 @ 6–20 dB (below 1e-6 sim floor) | measured ([reports/ber_full_awgn.csv](reports/ber_full_awgn.csv)) — run via `make run-sim-full` |
 | Rayleigh BER smoke | `<TO MEASURE>` | Plan: add a `make run-sim-rayleigh` target that calls `run_sim.py --fading --output-csv reports/ber_smoke_rayleigh.csv`, commit the artifact. |
 | Jetson ONNX inference latency (p50/p95/p99) | `<TO MEASURE>` | Plan: run `edge/jetson_benchmark_template.py` on Jetson when hardware lands; capture mean latency and inferences/sec into `reports/jetson_inference_benchmark.json`. |
 

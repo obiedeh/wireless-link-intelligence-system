@@ -21,6 +21,9 @@ lint: .venv
 run-sim: .venv
 	$(PYTHON) run_sim.py --num-bits 2000 --seed 7 --output-csv reports/ber_smoke_awgn.csv --output-plot reports/ber_smoke_awgn.svg
 
+run-sim-full: .venv
+	$(PYTHON) run_sim.py --num-bits 1000000 --seed 7 --output-csv reports/ber_full_awgn.csv --output-plot reports/ber_full_awgn.svg
+
 generate-evidence: .venv
 	$(PYTHON) generate_dataset.py --output data/link_conditions.csv --samples 120 --num-bits 1200 --seed 7
 
