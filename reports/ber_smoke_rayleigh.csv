@@ -1,5 +1,5 @@
 channel,snr_db,ber,num_bits
-Rayleigh,0,0.0025,2000
+Rayleigh,0,0.048,2000
 Rayleigh,2,0.0,2000
 Rayleigh,4,0.0,2000
 Rayleigh,6,0.0,2000
