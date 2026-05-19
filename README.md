@@ -27,6 +27,14 @@ The goal is to build a reproducible signal-processing testbed for understanding 
 
 ---
 
+## Recommended GitHub About
+
+- **Suggested short description:** Foundational wireless simulation repo for QPSK, BER/SNR analysis, and future AI-assisted link estimation experiments.
+- **Suggested topics/tags:** `wireless`, `qpsk`, `signal-processing`, `ber`, `snr`, `simulation`, `link-estimation`
+- **Positioning category:** Foundational
+
+---
+
 ## Why This Matters
 
 AI-RAN and edge AI systems depend on reliable wireless links, predictable channel behavior, and accurate interpretation of physical-layer performance.
