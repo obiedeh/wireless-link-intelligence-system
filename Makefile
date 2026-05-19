@@ -27,6 +27,9 @@ run-sim-full: .venv
 run-sim-rayleigh: .venv
 	$(PYTHON) run_sim.py --fading --num-bits 2000 --seed 7 --output-csv reports/ber_smoke_rayleigh.csv --output-plot reports/ber_smoke_rayleigh.svg
 
+run-sim-rayleigh-full: .venv
+	$(PYTHON) run_sim_ensemble.py --fading --n-realizations 200 --num-bits 10000 --seed 7 --output-csv reports/ber_full_rayleigh.csv --output-plot reports/ber_full_rayleigh.svg
+
 generate-evidence: .venv
 	$(PYTHON) generate_dataset.py --output data/link_conditions.csv --samples 120 --num-bits 1200 --seed 7
 
