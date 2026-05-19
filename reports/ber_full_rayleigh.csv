@@ -1,0 +1,12 @@
+channel,snr_db,ber,num_bits,n_realizations
+Rayleigh,0,0.0023599999999999997,10000,200
+Rayleigh,2,0.0001935,10000,200
+Rayleigh,4,3.5e-06,10000,200
+Rayleigh,6,0.0,10000,200
+Rayleigh,8,0.0,10000,200
+Rayleigh,10,0.0,10000,200
+Rayleigh,12,0.0,10000,200
+Rayleigh,14,0.0,10000,200
+Rayleigh,16,0.0,10000,200
+Rayleigh,18,0.0,10000,200
+Rayleigh,20,0.0,10000,200
