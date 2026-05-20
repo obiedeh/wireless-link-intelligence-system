@@ -5,6 +5,8 @@ __pycache__/
 *.pyo
 .ipynb_checkpoints/
 *.nbconvert.ipynb
+.pytest_cache/
+.ruff_cache/
 
 data/*.csv
 models/*.joblib

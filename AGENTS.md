@@ -1,16 +1,20 @@
 # AGENTS.md — Coding Agent Guide
 
-This file is the authoritative reference for AI coding agents working in this repository.
+**Wireless Link Intelligence System** — operating instructions for AI coding agents.
 Read this before making any changes.
 
 ## Project Purpose
 
-Classical QPSK baseband simulator with an AI-assisted link estimation layer.
-The classical simulator (BER vs SNR, constellation plots) is the baseline.
-The ML layer estimates link conditions from synthetic constellation statistics.
+A production-discipline reference for physical-layer AI: a classical QPSK baseband
+simulator (BER vs SNR, constellation analysis, AWGN + Rayleigh channels) layered with
+four scikit-learn link estimators that learn from constellation statistics, plus an
+ONNX export path and Jetson benchmark template. End-to-end reproducible from a fresh
+clone.
 
 **This is not a production telecom receiver, not a full AI-RAN base station, not a
-standards-compliant modem.**
+standards-compliant modem.** It is a measurable simulation testbed and edge-inference
+preparation repo where the engineering pattern — classical baseline first, ML second,
+edge path third, honest weak results surfaced — is the deliverable.
 
 ## Source of Truth
 
