@@ -48,6 +48,9 @@ jobs:
       - name: Run OFDM adaptive-QAM BER sweep
         run: python run_sim_ofdm.py --num-bits 5000 --snr-min 0 --snr-max 24 --snr-step 6 --seed 7 --output-csv reports/ber_full_ofdm_awgn.csv --output-plot reports/ber_full_ofdm_awgn.svg
 
+      - name: Run TDL channel BLER sweep (3GPP TR 38.901)
+        run: python run_sim_tdl.py --num-bits 1024 --n-realizations 20 --snr-min 0 --snr-max 24 --snr-step 6 --seed 7 --output-csv reports/bler_full_tdl_ofdm.csv --output-plot reports/bler_full_tdl_ofdm.svg
+
       - name: Generate evidence dataset
         run: python generate_dataset.py --output data/link_conditions.csv --samples 60 --num-bits 800 --seed 7
 
@@ -66,4 +69,6 @@ jobs:
           test -s reports/dashboard.html
           test -s reports/ber_full_ofdm_awgn.csv
           test -s reports/ber_full_ofdm_awgn.svg
+          test -s reports/bler_full_tdl_ofdm.csv
+          test -s reports/bler_full_tdl_ofdm.svg
           test -s models/metrics.json
