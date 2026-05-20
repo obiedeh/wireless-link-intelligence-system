@@ -42,7 +42,11 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 100
 src = ["."]
+exclude = ["notebooks/legacy/**", ".venv/**"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 ignore = ["E402", "E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"notebooks/legacy/*.ipynb" = ["E402", "F401", "F811", "F821", "F841", "I001", "B007"]
