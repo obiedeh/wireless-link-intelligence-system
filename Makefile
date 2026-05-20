@@ -30,6 +30,9 @@ run-sim-rayleigh: .venv
 run-sim-rayleigh-full: .venv
 	$(PYTHON) run_sim_ensemble.py --fading --n-realizations 200 --num-bits 10000 --seed 7 --output-csv reports/ber_full_rayleigh.csv --output-plot reports/ber_full_rayleigh.svg
 
+run-sim-ofdm: .venv
+	$(PYTHON) run_sim_ofdm.py --num-bits 50000 --seed 7 --output-csv reports/ber_full_ofdm_awgn.csv --output-plot reports/ber_full_ofdm_awgn.svg
+
 generate-evidence: .venv
 	$(PYTHON) generate_dataset.py --output data/link_conditions.csv --samples 120 --num-bits 1200 --seed 7
 
@@ -45,6 +48,8 @@ validate-evidence:
 	test -s reports/link_estimation_report.md
 	test -s reports/link_estimation_metrics.json
 	test -s reports/dashboard.html
+	test -s reports/ber_full_ofdm_awgn.csv
+	test -s reports/ber_full_ofdm_awgn.svg
 	test -s models/metrics.json
 
-verify: lint test run-sim generate-evidence train-evidence dashboard validate-evidence
+verify: lint test run-sim run-sim-ofdm generate-evidence train-evidence dashboard validate-evidence
