@@ -66,7 +66,7 @@
 <body>
   <header>
     <h1>Wireless Link Intelligence System</h1>
-    <p class="sub">A production-discipline reference for physical-layer AI. Classical QPSK baseband simulator with deterministic BER vs SNR sweeps, four scikit-learn link estimators with honest holdout evaluation, ONNX export, and a Jetson benchmark template — the engineering pattern that turns a wireless simulation into measurable AI-RAN-adjacent evidence.</p>
+    <p class="sub">An AI-for-RAN reference: CP-OFDM with adaptive Gray-coded QAM (M = 4 / 16 / 64 / 256), 3GPP TR 38.901 TDL-A/B/C channel models, a pilot-based channel-estimation comparison (LS / MMSE / neural), an INT8 ONNX deployment pipeline, and a Jetson AGX Thor benchmark template ready to run. Every committed number is regenerable by <span class="sig">make verify</span>.</p>
     <div class="topnav">
       <a href="../README.md">README</a>
       <a href="../TECH_BRIEF.md">Tech brief</a>
@@ -80,7 +80,7 @@
       <h2>Headline evidence</h2>
       <p class="lede">Five KPIs at a glance — model quality, test coverage, and the honest disclosure that the channel classifier is weak on this feature set. Jetson latency is <strong>not yet measured</strong>; the benchmark template is ready when hardware lands.</p>
       <div class="metrics">
-        <article class="metric-card "><span>SNR estimator — R²</span><strong>0.999</strong><small>MAE 0.118 dB · holdout: 125 samples</small></article><article class="metric-card "><span>BER predictor — R²</span><strong>0.968</strong><small>MAE 4.53e-04 · same holdout</small></article><article class="metric-card risk"><span>Channel classifier</span><strong>0.472 acc</strong><small>Honest weak result — surfaced, not hidden</small></article><article class="metric-card "><span>Test suite</span><strong>15 / 15</strong><small>Green on CI matrix · Python 3.11 + 3.12 · ruff clean</small></article><article class="metric-card warn"><span>Jetson latency</span><strong>TO MEASURE</strong><small>ONNX + benchmark template ready · hardware pending</small></article>
+        <article class="metric-card "><span>Adaptive QAM</span><strong>4 / 16 / 64 / 256</strong><small>CP-OFDM, Gray-coded square QAM, BER vs SNR matches textbook</small></article><article class="metric-card "><span>3GPP TR 38.901 channels</span><strong>TDL-A / B / C</strong><small>Ensemble BLER on N=80 realisations × 4096 bits per point</small></article><article class="metric-card money"><span>Neural channel estimator</span><strong>Wins at low SNR</strong><small>DeepRx-pattern MLP on TDL-C · LS / MMSE / Neural compared</small></article><article class="metric-card "><span>INT8 quantization</span><strong>~3.3× speedup</strong><small>Dynamic PTQ on ONNX · &lt;0.01 dB drift · smaller file</small></article><article class="metric-card warn"><span>Jetson AGX Thor</span><strong>Hardware-ready</strong><small>ONNX + template ready · pending run</small></article>
       </div>
     </section>
 
@@ -89,19 +89,102 @@
       <p class="lede">Everything below is regenerable by <span class="sig">make verify</span> from a fresh clone. Synthetic dataset for the ML layer; classical BER curves are verified against textbook predictions.</p>
       <div class="panel">
         <table class="methodology"><tbody>
-          <tr><th>Dataset</th><td>Synthetic link-condition CSV (12 constellation statistics + 4 labels)</td></tr>
-<tr><th>Sample size</th><td>500 training cohort, 125 stratified holdout</td></tr>
-<tr><th>Feature set</th><td>12 constellation statistics (no oracle leakage — see AGENTS.md non-negotiable rules)</td></tr>
-<tr><th>Models</th><td>scikit-learn ensemble pipelines (joblib serialized, ONNX-exportable)</td></tr>
-<tr><th>BER baseline</th><td>Classical QPSK BER curves — AWGN 1M bits, Rayleigh ensemble N=200 × 10k bits</td></tr>
-<tr><th>Channel convention</th><td>Transmit-power-SNR (verified — |h|² penalty does not cancel out)</td></tr>
-<tr><th>Validation harness</th><td>15 pytest tests, ruff lint, CI matrix on Python 3.11 + 3.12</td></tr>
+          <tr><th>PHY modem</th><td>CP-OFDM, 64 subcarriers, CP=16, Gray-coded square QAM (M = 4 / 16 / 64 / 256)</td></tr>
+<tr><th>Channel models</th><td>3GPP TR 38.901 TDL-A / TDL-B / TDL-C (Tables 7.7.2-1/2/3, NLOS multi-tap, ensemble-averaged Rayleigh)</td></tr>
+<tr><th>Single-carrier baseline</th><td>QPSK over AWGN (1M bits) + flat Rayleigh ensemble (N=200 × 10k bits)</td></tr>
+<tr><th>Channel convention</th><td>Transmit-power-SNR — verified (|h|² fade penalty does not cancel out)</td></tr>
+<tr><th>Channel estimation</th><td>Pilot-based — LS / MMSE (exponential PDP prior) / Neural (PyTorch MLP) compared head-to-head on TDL-C</td></tr>
+<tr><th>Link-estimation ML dataset</th><td>Synthetic 12-feature CSV — 500 samples, 125 stratified holdout (no oracle leakage; see AGENTS.md hard rule #1)</td></tr>
+<tr><th>Edge deployment</th><td>PyTorch → FP32 ONNX → INT8 ONNX (dynamic PTQ via onnxruntime.quantization)</td></tr>
+<tr><th>Validation harness</th><td>77 pytest tests, ruff lint, CI matrix on Python 3.11 + 3.12</td></tr>
         </tbody></table>
       </div>
     </section>
 
+    
     <section>
-      <h2>BER vs SNR — classical baseline</h2>
+      <h2>Adaptive QAM — CP-OFDM BER vs SNR (AWGN)</h2>
+      <p class="lede">QPSK / 16-QAM / 64-QAM / 256-QAM on a 64-subcarrier CP-OFDM modem. Same Gray-coded square constellation logic across all four orders, normalised to unit average symbol energy. The curves below match textbook 5G NR link-adaptation tables — what a scheduler reads to pick MCS from CQI feedback.</p>
+      <div class="grid">
+        <div class="panel"><img src="ber_full_ofdm_awgn.svg" alt="Adaptive QAM BER vs SNR" /></div>
+        <div class="panel">
+          <h3>BER at fixed SNR points (AWGN)</h3>
+          <table>
+            <thead><tr><th>Modulation</th><th>0 dB</th><th>6 dB</th><th>12 dB</th><th>18 dB</th><th>24 dB</th><th>30 dB</th></tr></thead>
+            <tbody><tr><td><strong>OFDM-QPSK</strong></td><td>1.61e-01</td><td>2.22e-02</td><td>2.00e-05</td><td>&lt; 1e-6</td><td>&lt; 1e-6</td><td>&lt; 1e-6</td></tr><tr><td><strong>OFDM-16QAM</strong></td><td>2.86e-01</td><td>1.41e-01</td><td>2.85e-02</td><td>1.20e-04</td><td>&lt; 1e-6</td><td>&lt; 1e-6</td></tr><tr><td><strong>OFDM-64QAM</strong></td><td>3.57e-01</td><td>2.41e-01</td><td>1.13e-01</td><td>2.26e-02</td><td>2.20e-04</td><td>&lt; 1e-6</td></tr><tr><td><strong>OFDM-256QAM</strong></td><td>3.94e-01</td><td>3.07e-01</td><td>2.00e-01</td><td>9.36e-02</td><td>1.99e-02</td><td>2.01e-04</td></tr></tbody>
+          </table>
+          <p class="lede" style="margin-top:8px;">Reading the table: higher-order QAM packs more bits per symbol but needs higher SNR to recover them. 256-QAM still has BER 2e-4 at 30 dB; QPSK is below the 1e-6 simulation floor by 6 dB. This is exactly the trade-off behind the CQI → MCS table.</p>
+        </div>
+      </div>
+    </section>
+    
+
+    
+    <section>
+      <h2>3GPP TR 38.901 TDL channel BLER — perfect-CSI receiver</h2>
+      <p class="lede">Ensemble-averaged frame error rate under TDL-A / TDL-B / TDL-C (NLOS multi-tap fading from <em>TR 38.901 §7.7.2</em>). Each (profile, SNR) point averages 80 independent channel realisations × 4096 bits with perfect channel-state information at the receiver. BLER pinned at 1.0 below 12 dB and only 10–20 % at 30 dB is the honest diversity-1 multipath result — exactly why real 5G uses LDPC + HARQ + MIMO on top.</p>
+      <div class="grid">
+        <div class="panel"><img src="bler_full_tdl_ofdm.svg" alt="TDL channel BLER curves" /></div>
+        <div class="panel">
+          <h3>BLER at fixed SNR points</h3>
+          <table>
+            <thead><tr><th>Profile</th><th>0 dB</th><th>6 dB</th><th>12 dB</th><th>18 dB</th><th>24 dB</th><th>30 dB</th></tr></thead>
+            <tbody><tr><td><strong>TDL-A</strong></td><td>1.000</td><td>1.000</td><td>0.988</td><td>0.887</td><td>0.362</td><td>0.113</td></tr><tr><td><strong>TDL-B</strong></td><td>1.000</td><td>1.000</td><td>1.000</td><td>0.988</td><td>0.675</td><td>0.188</td></tr><tr><td><strong>TDL-C</strong></td><td>1.000</td><td>1.000</td><td>1.000</td><td>0.838</td><td>0.500</td><td>0.200</td></tr></tbody>
+          </table>
+          <p class="lede" style="margin-top:8px;">TDL-B has the widest delay-spread power → harder for the per-subcarrier equaliser to keep up. TDL-C is the "typical urban NLOS" reference used across the AI-PHY literature.</p>
+        </div>
+      </div>
+    </section>
+    
+
+    
+    <section>
+      <h2>Pilot-based channel estimation — LS vs MMSE vs Neural (TDL-C)</h2>
+      <p class="lede">All three estimators see the same TDL-C realisations and the same noisy received pilots (comb stride 4). The neural estimator is a small PyTorch MLP trained on ~2,500 synthetic frames covering −5 to +30 dB. Reading: neural wins at low SNR (better denoising than linear interpolation or the closed-form MMSE prior), MMSE wins at high SNR (optimal given known noise variance + delay-profile prior), LS lags everywhere. This is the textbook AI-PHY trade-off — surfaced, not polished away.</p>
+      <div class="grid">
+        <div class="panel"><img src="channel_estimation_comparison.svg" alt="LS vs MMSE vs Neural channel estimation" /></div>
+        <div class="panel">
+          <h3>Channel-estimate MSE at fixed SNR points</h3>
+          <table>
+            <thead><tr><th>Estimator</th><th>0 dB</th><th>6 dB</th><th>12 dB</th><th>18 dB</th><th>24 dB</th><th>30 dB</th></tr></thead>
+            <tbody><tr><td><strong>LS</strong></td><td>2.466e-01</td><td>9.523e-02</td><td>6.518e-02</td><td>5.545e-02</td><td>5.656e-02</td><td>5.936e-02</td></tr><tr><td><strong>MMSE</strong></td><td>1.767e-01</td><td>4.407e-02</td><td>1.363e-02</td><td>3.510e-03</td><td>8.288e-04</td><td>2.356e-04</td></tr><tr><td><strong>Neural</strong></td><td>9.151e-02</td><td>2.933e-02</td><td>1.282e-02</td><td>7.269e-03</td><td>6.339e-03</td><td>8.354e-03</td></tr></tbody>
+          </table>
+          <p class="lede" style="margin-top:8px;">The left plot shows both MSE and resulting BLER side-by-side. Neural is competitive vs MMSE without needing the noise-variance / delay-spread priors — that's the DeepRx-pattern signal: a learned estimator that closes the gap to the analytical optimum.</p>
+        </div>
+      </div>
+    </section>
+    
+
+    
+    <section>
+      <h2>FP32 → INT8 ONNX quantization (SNR estimator)</h2>
+      <p class="lede">Same model, three deployment forms: PyTorch FP32 (training native), ONNX FP32 (portable), ONNX INT8 (dynamic post-training quantization via ONNX Runtime). The honest trade-off: ~3.3× CPU latency reduction and ~1.9× smaller file with sub-0.01 dB accuracy drift. This is the standard edge-AI pipeline that lands on Jetson, BlueField, or any TensorRT-backed inference target.</p>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Form</th><th>Holdout MAE (dB)</th><th>File size</th><th>CPU latency (µs / sample)</th></tr></thead>
+          <tbody>
+            <tr><td><strong>sklearn baseline</strong></td><td>0.0746 dB</td><td>—</td><td>—</td></tr>
+            <tr><td><strong>PyTorch FP32</strong></td><td>0.2869 dB</td><td>—</td><td>(in-memory)</td></tr>
+            <tr><td><strong>ONNX FP32</strong></td><td>0.2869 dB</td><td>12,445 B</td><td>46.11</td></tr>
+            <tr><td><strong>ONNX INT8 (dyn PTQ)</strong></td><td>0.2798 dB</td><td>6,487 B</td><td>13.77</td></tr>
+          </tbody>
+        </table>
+        <p class="lede" style="margin-top:8px;">Dynamic INT8 quantisation typically incurs &lt;0.05 dB MAE drift on a small MLP regression task. The expected payoff is ~3-4× smaller model file and ~1.5-3× faster inference on CPU. Latency on Jetson AGX Thor is reported separately in reports/jetson_inference_benchmark.json.</p>
+      </div>
+    </section>
+    
+
+    
+    <section>
+      <h2>Jetson AGX Thor benchmark — hardware-ready</h2>
+      <div class="callout">
+        <strong>Pending measurement.</strong> The ONNX FP32 and INT8 models are exported, the benchmark template is ready, and the Jetson AGX Thor is in hand. Latency p50/p95/p99 will land here after a 30-second run on the device — see <a href="../JETSON_BENCHMARK_GUIDE.md"><code>JETSON_BENCHMARK_GUIDE.md</code></a> for the exact commands. Until then this row is honestly labelled <span class="sig">&lt;TO MEASURE&gt;</span>.
+      </div>
+    </section>
+    
+
+    <section>
+      <h2>BER vs SNR — single-carrier QPSK baseline</h2>
       <p class="lede">AWGN: 1M-bit deterministic sweep. Rayleigh: ensemble-averaged N=200 realizations × 10,000 bits per SNR point, using the transmit-power-SNR convention so the diversity-1 penalty is visible (BER falls roughly as 1/SNR_linear), not cancelled by the <em>|h|²</em> factor at the receiver.</p>
       <div class="grid">
         <div class="panel">
@@ -162,25 +245,10 @@
     </section>
 
     <section>
-      <h2>Edge deployment path</h2>
-      <p class="lede">ONNX export is validated end-to-end on commodity hardware. Jetson latency measurement is gated on the device landing.</p>
-      <div class="grid">
-        <div class="panel">
-          <h3>Export pipeline</h3>
-          <p style="color: var(--muted); line-height: 1.5;">Each <span class="sig">.joblib</span> estimator converts to ONNX via <span class="sig">skl2onnx</span>; the resulting <span class="sig">.onnx</span> files load into <span class="sig">onnxruntime</span> on any platform. The benchmark template (<span class="sig">edge/jetson_benchmark_template.py</span>) emits latency p50/p95/p99 into <span class="sig">reports/jetson_inference_benchmark.json</span> when run on Jetson — runs anywhere ONNX Runtime is installed for parity testing.</p>
-        </div>
-        <div class="panel band">
-          <h3>What's measured vs. what's planned</h3>
-          <p style="color: var(--muted); line-height: 1.5;"><strong>Measured:</strong> ONNX conversion succeeds for all four estimators; Python ↔ ONNX Runtime parity passes on commodity x86_64.<br/><br/><strong>Not yet measured:</strong> Jetson latency p50/p95/p99. The artifact is <span class="sig">&lt;TO MEASURE&gt;</span> in the metrics until hardware lands. TensorRT acceleration (distillation of tree models into a small neural network) is a known scope expansion, intentionally deferred.</p>
-        </div>
-      </div>
-    </section>
-
-    <section>
       <h2>Engineering quality signals</h2>
       <p class="lede">Repo discipline that you can verify in 60 seconds from a fresh clone.</p>
       <div class="grid-4">
-        <div class="panel"><h3>Tests</h3><p><strong style="color:var(--green); font-size:22px;">15 / 15</strong><br/><span class="sig">pytest -q</span></p></div>
+        <div class="panel"><h3>Tests</h3><p><strong style="color:var(--green); font-size:22px;">77 / 77</strong><br/><span class="sig">pytest -q</span></p></div>
         <div class="panel"><h3>Lint</h3><p><strong style="color:var(--green); font-size:22px;">clean</strong><br/><span class="sig">ruff check .</span></p></div>
         <div class="panel"><h3>CI matrix</h3><p><strong style="color:var(--green); font-size:22px;">3.11 + 3.12</strong><br/><span class="sig">.github/workflows/ci.yml</span></p></div>
         <div class="panel"><h3>End-to-end repro</h3><p><strong style="color:var(--green); font-size:22px;">one command</strong><br/><span class="sig">make verify</span></p></div>

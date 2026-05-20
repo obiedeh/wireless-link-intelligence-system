@@ -20,15 +20,17 @@ It is **not** a production telecom receiver, not a full AI-RAN base station, not
 
 | What | Value | Source |
 |---|---:|---|
-| SNR estimator — MAE / R² | **0.118 dB** / 0.999 | [`reports/link_estimation_metrics.json`](reports/link_estimation_metrics.json) |
-| BER predictor — MAE / R² | 0.000453 / **0.968** | same |
-| Channel classifier — accuracy | **0.472** *(honest weak result — disclosed, not hidden)* | same |
-| Link-quality scorer — MAE / R² | 4.089 / 0.904 | same |
-| Holdout sample size | 125 / 500 (25% stratified) | same |
-| AWGN BER full sweep (1M bits) | 2.42e-3 @ 0 dB → 1.83e-4 @ 2 dB → below 1e-6 sim floor at 6+ dB | [`reports/ber_full_awgn.csv`](reports/ber_full_awgn.csv) |
+| **CP-OFDM with adaptive QAM** | M = 4 / 16 / 64 / 256 — BER vs SNR curves on AWGN | [`reports/ber_full_ofdm_awgn.csv`](reports/ber_full_ofdm_awgn.csv) |
+| **3GPP TR 38.901 channels** | TDL-A / TDL-B / TDL-C NLOS — ensemble BLER on 80 realisations × 4 096 bits | [`reports/bler_full_tdl_ofdm.csv`](reports/bler_full_tdl_ofdm.csv) |
+| **Channel estimation comparison** | LS / MMSE / Neural (PyTorch MLP) on TDL-C — neural wins at low SNR | [`reports/channel_estimation_comparison.csv`](reports/channel_estimation_comparison.csv) |
+| **INT8 quantization pipeline** | PyTorch → FP32 ONNX → INT8 ONNX · ~3.3× CPU latency drop · <0.01 dB drift | [`reports/snr_quantization_comparison.json`](reports/snr_quantization_comparison.json) |
+| **Jetson AGX Thor latency p50/p95/p99** | benchmark hardware-ready | [`JETSON_BENCHMARK_GUIDE.md`](JETSON_BENCHMARK_GUIDE.md) |
+| AWGN BER full sweep (1M bits, single-carrier) | 2.42e-3 @ 0 dB → 1.83e-4 @ 2 dB → below 1e-6 sim floor at 6+ dB | [`reports/ber_full_awgn.csv`](reports/ber_full_awgn.csv) |
 | Ensemble-averaged Rayleigh BER (200 × 10k bits) | 4.18e-2 @ 0 dB → 5.2e-4 @ 20 dB *(diversity-1 visible)* | [`reports/ber_full_rayleigh.csv`](reports/ber_full_rayleigh.csv) |
-| Jetson latency p50/p95/p99 | **`<TO MEASURE>`** | template ready; hardware pending |
-| Tests | **15 / 15** green | [`tests/`](tests/) + `pytest -q` |
+| SNR estimator MAE / R² (12 synthetic features) | 0.118 dB / **0.999** | [`reports/link_estimation_metrics.json`](reports/link_estimation_metrics.json) |
+| Channel classifier — accuracy | **0.472** *(honest weak result — disclosed, not hidden)* | same |
+| Holdout sample size | 125 / 500 (25 % stratified) | same |
+| Tests | **77 / 77** green | [`tests/`](tests/) + `pytest -q` |
 | CI matrix | Python 3.11 + 3.12, Ubuntu | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
 | End-to-end reproducible | `make verify` regenerates every artifact under `reports/` | [`Makefile`](Makefile) |
 
@@ -84,7 +86,7 @@ make install-dev
 make verify
 ```
 
-`make verify` runs **ruff lint → 15 pytest tests → BER smoke sweep → synthetic dataset generation → model training → dashboard build → artifact-existence checks**. GitHub Actions CI ([`ci.yml`](.github/workflows/ci.yml)) runs the same recipe on Ubuntu with **Python 3.11 + 3.12 matrix** on every push and pull request.
+`make verify` runs **ruff lint → 77 pytest tests → BER smoke + OFDM sweep + TDL BLER sweep → channel-estimation comparison → synthetic dataset generation → link-estimator training → PyTorch SNR + INT8 ONNX → dashboard build → artifact-existence checks**. GitHub Actions CI ([`ci.yml`](.github/workflows/ci.yml)) runs the same recipe on Ubuntu with **Python 3.11 + 3.12 matrix** on every push and pull request.
 
 Repo-quality signals:
 

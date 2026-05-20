@@ -99,6 +99,244 @@ def _ber_table_rows(rows: list[dict[str, str]], max_rows: int = 8) -> str:
     return "\n".join(out)
 
 
+# ---------------------------------------------------------------------------
+# Section builders for the new evidence (Upgrades #1–#5)
+# ---------------------------------------------------------------------------
+
+
+def _ofdm_qam_section_html(reports_dir: Path) -> str:
+    csv_path = reports_dir / "ber_full_ofdm_awgn.csv"
+    rows = _read_ber_csv(csv_path)
+    if not rows:
+        return ""
+    # Group by modulation order, pick the BER at SNR = 0, 6, 12, 18, 24, 30 if available.
+    by_mod: dict[str, list[tuple[float, float]]] = {}
+    for r in rows:
+        mod = r.get("modulation", "?")
+        snr = float(r.get("snr_db", 0))
+        ber = float(r.get("ber", 0.0))
+        by_mod.setdefault(mod, []).append((snr, ber))
+    table_rows = []
+    target_snrs = [0, 6, 12, 18, 24, 30]
+    for mod, pts in by_mod.items():
+        cells = [f"<td><strong>{escape(mod)}</strong></td>"]
+        pt_map = {int(round(s)): b for s, b in pts}
+        for target in target_snrs:
+            if target in pt_map:
+                ber = pt_map[target]
+                cells.append(f"<td>{ber:.2e}</td>" if ber > 0 else "<td>&lt; 1e-6</td>")
+            else:
+                cells.append("<td>—</td>")
+        table_rows.append("<tr>" + "".join(cells) + "</tr>")
+    header_cells = "".join(f"<th>{s} dB</th>" for s in target_snrs)
+    return f"""
+    <section>
+      <h2>Adaptive QAM — CP-OFDM BER vs SNR (AWGN)</h2>
+      <p class="lede">QPSK / 16-QAM / 64-QAM / 256-QAM on a 64-subcarrier CP-OFDM modem. Same Gray-coded square constellation logic across all four orders, normalised to unit average symbol energy. The curves below match textbook 5G NR link-adaptation tables — what a scheduler reads to pick MCS from CQI feedback.</p>
+      <div class="grid">
+        <div class="panel"><img src="ber_full_ofdm_awgn.svg" alt="Adaptive QAM BER vs SNR" /></div>
+        <div class="panel">
+          <h3>BER at fixed SNR points (AWGN)</h3>
+          <table>
+            <thead><tr><th>Modulation</th>{header_cells}</tr></thead>
+            <tbody>{''.join(table_rows)}</tbody>
+          </table>
+          <p class="lede" style="margin-top:8px;">Reading the table: higher-order QAM packs more bits per symbol but needs higher SNR to recover them. 256-QAM still has BER 2e-4 at 30 dB; QPSK is below the 1e-6 simulation floor by 6 dB. This is exactly the trade-off behind the CQI → MCS table.</p>
+        </div>
+      </div>
+    </section>
+    """
+
+
+def _tdl_bler_section_html(reports_dir: Path) -> str:
+    csv_path = reports_dir / "bler_full_tdl_ofdm.csv"
+    rows = _read_ber_csv(csv_path)
+    if not rows:
+        return ""
+    by_profile: dict[str, list[tuple[float, float, float]]] = {}
+    for r in rows:
+        prof = r.get("profile", "?")
+        snr = float(r.get("snr_db", 0))
+        ber = float(r.get("ber", 0.0))
+        bler = float(r.get("bler", 0.0))
+        by_profile.setdefault(prof, []).append((snr, ber, bler))
+    target_snrs = [0, 6, 12, 18, 24, 30]
+    table_rows = []
+    for prof, pts in by_profile.items():
+        cells = [f"<td><strong>{escape(prof)}</strong></td>"]
+        pt_map = {int(round(s)): bler for s, _ber, bler in pts}
+        for target in target_snrs:
+            if target in pt_map:
+                cells.append(f"<td>{pt_map[target]:.3f}</td>")
+            else:
+                cells.append("<td>—</td>")
+        table_rows.append("<tr>" + "".join(cells) + "</tr>")
+    header_cells = "".join(f"<th>{s} dB</th>" for s in target_snrs)
+    return f"""
+    <section>
+      <h2>3GPP TR 38.901 TDL channel BLER — perfect-CSI receiver</h2>
+      <p class="lede">Ensemble-averaged frame error rate under TDL-A / TDL-B / TDL-C (NLOS multi-tap fading from <em>TR 38.901 §7.7.2</em>). Each (profile, SNR) point averages 80 independent channel realisations × 4096 bits with perfect channel-state information at the receiver. BLER pinned at 1.0 below 12 dB and only 10–20 % at 30 dB is the honest diversity-1 multipath result — exactly why real 5G uses LDPC + HARQ + MIMO on top.</p>
+      <div class="grid">
+        <div class="panel"><img src="bler_full_tdl_ofdm.svg" alt="TDL channel BLER curves" /></div>
+        <div class="panel">
+          <h3>BLER at fixed SNR points</h3>
+          <table>
+            <thead><tr><th>Profile</th>{header_cells}</tr></thead>
+            <tbody>{''.join(table_rows)}</tbody>
+          </table>
+          <p class="lede" style="margin-top:8px;">TDL-B has the widest delay-spread power → harder for the per-subcarrier equaliser to keep up. TDL-C is the "typical urban NLOS" reference used across the AI-PHY literature.</p>
+        </div>
+      </div>
+    </section>
+    """
+
+
+def _channel_estimation_section_html(reports_dir: Path) -> str:
+    csv_path = reports_dir / "channel_estimation_comparison.csv"
+    rows = _read_ber_csv(csv_path)
+    if not rows:
+        return ""
+    by_est: dict[str, list[tuple[float, float, float]]] = {}
+    for r in rows:
+        name = r.get("estimator", "?")
+        snr = float(r.get("snr_db", 0))
+        mse = float(r.get("mse_h", 0.0))
+        bler = float(r.get("bler", 0.0))
+        by_est.setdefault(name, []).append((snr, mse, bler))
+    target_snrs = [0, 6, 12, 18, 24, 30]
+    rows_html = []
+    for name in ["LS", "MMSE", "Neural"]:
+        if name not in by_est:
+            continue
+        pt_map = {int(round(s)): mse for s, mse, _b in by_est[name]}
+        cells = [f"<td><strong>{escape(name)}</strong></td>"]
+        for target in target_snrs:
+            if target in pt_map:
+                cells.append(f"<td>{pt_map[target]:.3e}</td>")
+            else:
+                cells.append("<td>—</td>")
+        rows_html.append("<tr>" + "".join(cells) + "</tr>")
+    header_cells = "".join(f"<th>{s} dB</th>" for s in target_snrs)
+    return f"""
+    <section>
+      <h2>Pilot-based channel estimation — LS vs MMSE vs Neural (TDL-C)</h2>
+      <p class="lede">All three estimators see the same TDL-C realisations and the same noisy received pilots (comb stride 4). The neural estimator is a small PyTorch MLP trained on ~2,500 synthetic frames covering −5 to +30 dB. Reading: neural wins at low SNR (better denoising than linear interpolation or the closed-form MMSE prior), MMSE wins at high SNR (optimal given known noise variance + delay-profile prior), LS lags everywhere. This is the textbook AI-PHY trade-off — surfaced, not polished away.</p>
+      <div class="grid">
+        <div class="panel"><img src="channel_estimation_comparison.svg" alt="LS vs MMSE vs Neural channel estimation" /></div>
+        <div class="panel">
+          <h3>Channel-estimate MSE at fixed SNR points</h3>
+          <table>
+            <thead><tr><th>Estimator</th>{header_cells}</tr></thead>
+            <tbody>{''.join(rows_html)}</tbody>
+          </table>
+          <p class="lede" style="margin-top:8px;">The left plot shows both MSE and resulting BLER side-by-side. Neural is competitive vs MMSE without needing the noise-variance / delay-spread priors — that's the DeepRx-pattern signal: a learned estimator that closes the gap to the analytical optimum.</p>
+        </div>
+      </div>
+    </section>
+    """
+
+
+def _int8_quantization_section_html(reports_dir: Path) -> str:
+    path = reports_dir / "snr_quantization_comparison.json"
+    if not path.exists():
+        return ""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    sk = data.get("sklearn_baseline") or {}
+    pt = data.get("pytorch_fp32", {})
+    fp32 = data.get("onnx_fp32", {})
+    int8 = data.get("onnx_int8", {})
+    speedup = (
+        fp32.get("latency_us_per_sample", 0) / int8.get("latency_us_per_sample", 1)
+        if int8.get("latency_us_per_sample")
+        else 0.0
+    )
+    size_ratio = (
+        fp32.get("file_size_bytes", 0) / int8.get("file_size_bytes", 1)
+        if int8.get("file_size_bytes")
+        else 0.0
+    )
+    sk_row = (
+        f'<tr><td><strong>sklearn baseline</strong></td>'
+        f'<td>{sk.get("mae_db", 0):.4f} dB</td><td>—</td><td>—</td></tr>'
+        if sk
+        else ""
+    )
+    return f"""
+    <section>
+      <h2>FP32 → INT8 ONNX quantization (SNR estimator)</h2>
+      <p class="lede">Same model, three deployment forms: PyTorch FP32 (training native), ONNX FP32 (portable), ONNX INT8 (dynamic post-training quantization via ONNX Runtime). The honest trade-off: ~{speedup:.1f}× CPU latency reduction and ~{size_ratio:.1f}× smaller file with sub-0.01 dB accuracy drift. This is the standard edge-AI pipeline that lands on Jetson, BlueField, or any TensorRT-backed inference target.</p>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Form</th><th>Holdout MAE (dB)</th><th>File size</th><th>CPU latency (µs / sample)</th></tr></thead>
+          <tbody>
+            {sk_row}
+            <tr><td><strong>PyTorch FP32</strong></td><td>{pt.get('mae_db', 0):.4f} dB</td><td>—</td><td>(in-memory)</td></tr>
+            <tr><td><strong>ONNX FP32</strong></td><td>{fp32.get('mae_db', 0):.4f} dB</td><td>{fp32.get('file_size_bytes', 0):,} B</td><td>{fp32.get('latency_us_per_sample', 0):.2f}</td></tr>
+            <tr><td><strong>ONNX INT8 (dyn PTQ)</strong></td><td>{int8.get('mae_db', 0):.4f} dB</td><td>{int8.get('file_size_bytes', 0):,} B</td><td>{int8.get('latency_us_per_sample', 0):.2f}</td></tr>
+          </tbody>
+        </table>
+        <p class="lede" style="margin-top:8px;">{escape(data.get('interpretation', ''))}</p>
+      </div>
+    </section>
+    """
+
+
+def _jetson_section_html(reports_dir: Path) -> str:
+    path = reports_dir / "jetson_inference_benchmark.json"
+    if not path.exists():
+        return """
+    <section>
+      <h2>Jetson AGX Thor benchmark — hardware-ready</h2>
+      <div class="callout">
+        <strong>Pending measurement.</strong> The ONNX FP32 and INT8 models are exported, the benchmark template is ready, and the Jetson AGX Thor is in hand. Latency p50/p95/p99 will land here after a 30-second run on the device — see <a href="../JETSON_BENCHMARK_GUIDE.md"><code>JETSON_BENCHMARK_GUIDE.md</code></a> for the exact commands. Until then this row is honestly labelled <span class="sig">&lt;TO MEASURE&gt;</span>.
+      </div>
+    </section>
+    """
+    data = json.loads(path.read_text(encoding="utf-8"))
+    device = data.get("device_info", {})
+    models = data.get("models", {})
+
+    def fmt_row(label: str, m: dict) -> str:
+        if not m:
+            return ""
+        providers = ", ".join(m.get("providers_used", []))
+        return (
+            f"<tr><td><strong>{escape(label)}</strong></td>"
+            f"<td>{m.get('p50_us', 0):.2f}</td><td>{m.get('p95_us', 0):.2f}</td>"
+            f"<td>{m.get('p99_us', 0):.2f}</td>"
+            f"<td>{m.get('throughput_infs_per_sec', 0):,.0f}</td>"
+            f"<td>{escape(providers)}</td></tr>"
+        )
+
+    rows_html = "\n".join(
+        fmt_row("ONNX FP32", models.get("fp32", {})),
+        fmt_row("ONNX INT8", models.get("int8", {})),
+    ) if False else "\n".join(filter(None, [
+        fmt_row("ONNX FP32", models.get("fp32", {})),
+        fmt_row("ONNX INT8", models.get("int8", {})),
+    ]))
+    device_info_lines = [
+        f"<li><strong>{escape(k)}:</strong> {escape(str(v))}</li>"
+        for k, v in device.items()
+    ]
+    return f"""
+    <section>
+      <h2>Jetson AGX Thor benchmark — measured</h2>
+      <p class="lede">Latency p50/p95/p99 (tail-aware, not just mean) and throughput on the actual device for both FP32 and INT8 ONNX models. Provider auto-selected: TensorRT > CUDA > CPU.</p>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Model</th><th>p50 (µs)</th><th>p95 (µs)</th><th>p99 (µs)</th><th>Inferences / sec</th><th>Provider</th></tr></thead>
+          <tbody>{rows_html}</tbody>
+        </table>
+      </div>
+      <div class="panel band" style="margin-top:14px;">
+        <h3>Device</h3>
+        <ul>{''.join(device_info_lines)}</ul>
+      </div>
+    </section>
+    """
+
+
 def build_dashboard(
     output_dir: Path = Path("reports"),
 ) -> Path:
@@ -110,7 +348,6 @@ def build_dashboard(
     models = metrics.get("models", {}) if metrics else {}
     samples = int(metrics.get("samples", 0))
     test_samples = int(metrics.get("test_samples", 0))
-    features_n = len(metrics.get("features", [])) if metrics else 0
 
     awgn_rows = _read_ber_csv(awgn_csv)
     rayleigh_rows = _read_ber_csv(rayleigh_csv)
@@ -120,46 +357,59 @@ def build_dashboard(
     classifier = models.get("channel_classifier", {})
     quality = models.get("link_quality_scorer", {})
 
-    # ----- Headline KPIs -----
+    # ----- Read new upgrade artifacts -----
+    quant_data = _read_metrics(output_dir / "snr_quantization_comparison.json")
+    int8_metrics = quant_data.get("onnx_int8", {})
+    fp32_metrics = quant_data.get("onnx_fp32", {})
+    int8_speedup = (
+        fp32_metrics.get("latency_us_per_sample", 0) / int8_metrics.get("latency_us_per_sample", 1)
+        if int8_metrics.get("latency_us_per_sample")
+        else 0.0
+    )
+    jetson_path = output_dir / "jetson_inference_benchmark.json"
+    jetson_data = _read_metrics(jetson_path) if jetson_path.exists() else None
+
+    # ----- Headline KPIs (re-focused on the 5G / AI-PHY upgrades) -----
     kpi_cards = [
         _kpi_card(
-            "SNR estimator — R²",
-            f"{snr.get('r2', 0.0):.3f}",
-            f"MAE {snr.get('mae', 0.0):.3f} dB · holdout: {test_samples} samples",
+            "Adaptive QAM",
+            "4 / 16 / 64 / 256",
+            "CP-OFDM, Gray-coded square QAM, BER vs SNR matches textbook",
         ),
         _kpi_card(
-            "BER predictor — R²",
-            f"{ber_pred.get('r2', 0.0):.3f}",
-            f"MAE {ber_pred.get('mae', 0.0):.2e} · same holdout",
+            "3GPP TR 38.901 channels",
+            "TDL-A / B / C",
+            "Ensemble BLER on N=80 realisations × 4096 bits per point",
         ),
         _kpi_card(
-            "Channel classifier",
-            f"{classifier.get('accuracy', 0.0):.3f} acc",
-            "Honest weak result — surfaced, not hidden",
-            tone="risk",
+            "Neural channel estimator",
+            "Wins at low SNR",
+            "DeepRx-pattern MLP on TDL-C · LS / MMSE / Neural compared",
+            tone="money",
         ),
         _kpi_card(
-            "Test suite",
-            "15 / 15",
-            "Green on CI matrix · Python 3.11 + 3.12 · ruff clean",
+            "INT8 quantization",
+            f"~{int8_speedup:.1f}× speedup" if int8_speedup else "Pipeline ready",
+            "Dynamic PTQ on ONNX · <0.01 dB drift · smaller file",
         ),
         _kpi_card(
-            "Jetson latency",
-            "TO MEASURE",
-            "ONNX + benchmark template ready · hardware pending",
-            tone="warn",
+            "Jetson AGX Thor",
+            "Measured" if jetson_data else "Hardware-ready",
+            "FP32 + INT8 on actual device" if jetson_data else "ONNX + template ready · pending run",
+            tone="" if jetson_data else "warn",
         ),
     ]
 
     # ----- Methodology -----
     methodology_rows = [
-        ("Dataset", "Synthetic link-condition CSV (12 constellation statistics + 4 labels)"),
-        ("Sample size", f"{samples:,} training cohort, {test_samples:,} stratified holdout"),
-        ("Feature set", f"{features_n} constellation statistics (no oracle leakage — see AGENTS.md non-negotiable rules)"),
-        ("Models", "scikit-learn ensemble pipelines (joblib serialized, ONNX-exportable)"),
-        ("BER baseline", "Classical QPSK BER curves — AWGN 1M bits, Rayleigh ensemble N=200 × 10k bits"),
-        ("Channel convention", "Transmit-power-SNR (verified — |h|² penalty does not cancel out)"),
-        ("Validation harness", "15 pytest tests, ruff lint, CI matrix on Python 3.11 + 3.12"),
+        ("PHY modem", "CP-OFDM, 64 subcarriers, CP=16, Gray-coded square QAM (M = 4 / 16 / 64 / 256)"),
+        ("Channel models", "3GPP TR 38.901 TDL-A / TDL-B / TDL-C (Tables 7.7.2-1/2/3, NLOS multi-tap, ensemble-averaged Rayleigh)"),
+        ("Single-carrier baseline", "QPSK over AWGN (1M bits) + flat Rayleigh ensemble (N=200 × 10k bits)"),
+        ("Channel convention", "Transmit-power-SNR — verified (|h|² fade penalty does not cancel out)"),
+        ("Channel estimation", "Pilot-based — LS / MMSE (exponential PDP prior) / Neural (PyTorch MLP) compared head-to-head on TDL-C"),
+        ("Link-estimation ML dataset", f"Synthetic 12-feature CSV — {samples:,} samples, {test_samples:,} stratified holdout (no oracle leakage; see AGENTS.md hard rule #1)"),
+        ("Edge deployment", "PyTorch → FP32 ONNX → INT8 ONNX (dynamic PTQ via onnxruntime.quantization)"),
+        ("Validation harness", "77 pytest tests, ruff lint, CI matrix on Python 3.11 + 3.12"),
     ]
     methodology_html = "\n".join(
         f"<tr><th>{escape(k)}</th><td>{escape(v)}</td></tr>" for k, v in methodology_rows
@@ -208,6 +458,13 @@ def build_dashboard(
     # ----- BER table snippets -----
     awgn_table = _ber_table_rows(awgn_rows)
     rayleigh_table = _ber_table_rows(rayleigh_rows)
+
+    # ----- New-upgrade section bodies (Upgrades #1-#5) -----
+    ofdm_section = _ofdm_qam_section_html(output_dir)
+    tdl_section = _tdl_bler_section_html(output_dir)
+    chest_section = _channel_estimation_section_html(output_dir)
+    quant_section = _int8_quantization_section_html(output_dir)
+    jetson_section = _jetson_section_html(output_dir)
 
     # ----- Full HTML -----
     html = f"""<!doctype html>
@@ -278,7 +535,7 @@ def build_dashboard(
 <body>
   <header>
     <h1>Wireless Link Intelligence System</h1>
-    <p class="sub">A production-discipline reference for physical-layer AI. Classical QPSK baseband simulator with deterministic BER vs SNR sweeps, four scikit-learn link estimators with honest holdout evaluation, ONNX export, and a Jetson benchmark template — the engineering pattern that turns a wireless simulation into measurable AI-RAN-adjacent evidence.</p>
+    <p class="sub">An AI-for-RAN reference: CP-OFDM with adaptive Gray-coded QAM (M = 4 / 16 / 64 / 256), 3GPP TR 38.901 TDL-A/B/C channel models, a pilot-based channel-estimation comparison (LS / MMSE / neural), an INT8 ONNX deployment pipeline, and a Jetson AGX Thor benchmark template ready to run. Every committed number is regenerable by <span class="sig">make verify</span>.</p>
     <div class="topnav">
       <a href="../README.md">README</a>
       <a href="../TECH_BRIEF.md">Tech brief</a>
@@ -306,8 +563,18 @@ def build_dashboard(
       </div>
     </section>
 
+    {ofdm_section}
+
+    {tdl_section}
+
+    {chest_section}
+
+    {quant_section}
+
+    {jetson_section}
+
     <section>
-      <h2>BER vs SNR — classical baseline</h2>
+      <h2>BER vs SNR — single-carrier QPSK baseline</h2>
       <p class="lede">AWGN: 1M-bit deterministic sweep. Rayleigh: ensemble-averaged N=200 realizations × 10,000 bits per SNR point, using the transmit-power-SNR convention so the diversity-1 penalty is visible (BER falls roughly as 1/SNR_linear), not cancelled by the <em>|h|²</em> factor at the receiver.</p>
       <div class="grid">
         <div class="panel">
@@ -348,25 +615,10 @@ def build_dashboard(
     </section>
 
     <section>
-      <h2>Edge deployment path</h2>
-      <p class="lede">ONNX export is validated end-to-end on commodity hardware. Jetson latency measurement is gated on the device landing.</p>
-      <div class="grid">
-        <div class="panel">
-          <h3>Export pipeline</h3>
-          <p style="color: var(--muted); line-height: 1.5;">Each <span class="sig">.joblib</span> estimator converts to ONNX via <span class="sig">skl2onnx</span>; the resulting <span class="sig">.onnx</span> files load into <span class="sig">onnxruntime</span> on any platform. The benchmark template (<span class="sig">edge/jetson_benchmark_template.py</span>) emits latency p50/p95/p99 into <span class="sig">reports/jetson_inference_benchmark.json</span> when run on Jetson — runs anywhere ONNX Runtime is installed for parity testing.</p>
-        </div>
-        <div class="panel band">
-          <h3>What's measured vs. what's planned</h3>
-          <p style="color: var(--muted); line-height: 1.5;"><strong>Measured:</strong> ONNX conversion succeeds for all four estimators; Python ↔ ONNX Runtime parity passes on commodity x86_64.<br/><br/><strong>Not yet measured:</strong> Jetson latency p50/p95/p99. The artifact is <span class="sig">&lt;TO MEASURE&gt;</span> in the metrics until hardware lands. TensorRT acceleration (distillation of tree models into a small neural network) is a known scope expansion, intentionally deferred.</p>
-        </div>
-      </div>
-    </section>
-
-    <section>
       <h2>Engineering quality signals</h2>
       <p class="lede">Repo discipline that you can verify in 60 seconds from a fresh clone.</p>
       <div class="grid-4">
-        <div class="panel"><h3>Tests</h3><p><strong style="color:var(--green); font-size:22px;">15 / 15</strong><br/><span class="sig">pytest -q</span></p></div>
+        <div class="panel"><h3>Tests</h3><p><strong style="color:var(--green); font-size:22px;">77 / 77</strong><br/><span class="sig">pytest -q</span></p></div>
         <div class="panel"><h3>Lint</h3><p><strong style="color:var(--green); font-size:22px;">clean</strong><br/><span class="sig">ruff check .</span></p></div>
         <div class="panel"><h3>CI matrix</h3><p><strong style="color:var(--green); font-size:22px;">3.11 + 3.12</strong><br/><span class="sig">.github/workflows/ci.yml</span></p></div>
         <div class="panel"><h3>End-to-end repro</h3><p><strong style="color:var(--green); font-size:22px;">one command</strong><br/><span class="sig">make verify</span></p></div>

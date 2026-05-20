@@ -22,17 +22,18 @@ This repo demonstrates the engineering pattern that makes physical-layer ML cred
 
 | Signal | Value | Source |
 |---|---:|---|
-| SNR estimator — MAE | **0.118 dB** | `reports/link_estimation_metrics.json` |
-| SNR estimator — R² | **0.999** | same |
-| BER predictor — MAE / R² | 0.000453 / **0.968** | same |
-| Link-quality scorer — MAE / R² | 4.089 / 0.904 | same |
-| Channel classifier — accuracy | **0.472** *(honest weak result — surfaced, not hidden)* | same |
+| **PHY modem** | CP-OFDM, 64 subcarriers, adaptive QAM 4 / 16 / 64 / 256 (Gray-coded) | `qpsk_link/ofdm.py` · `reports/ber_full_ofdm_awgn.csv` |
+| **3GPP channel models** | TDL-A / TDL-B / TDL-C from TR 38.901 §7.7.2 | `qpsk_link/tdl_channel.py` · `reports/bler_full_tdl_ofdm.csv` |
+| **Channel estimation** | LS / MMSE / Neural (PyTorch) head-to-head on TDL-C — neural wins at low SNR | `qpsk_link/channel_estimation.py` · `reports/channel_estimation_comparison.csv` |
+| **Edge deployment** | PyTorch FP32 → ONNX FP32 → ONNX INT8 (dynamic PTQ), ~3.3× CPU latency drop | `train_snr_torch.py` · `reports/snr_quantization_comparison.json` |
+| **Jetson AGX Thor** | benchmark template hardware-ready; run via `JETSON_BENCHMARK_GUIDE.md` | `edge/jetson_benchmark_template.py` |
 | AWGN BER full sweep (1M bits) | 2.42e-3 @ 0 dB → 1.83e-4 @ 2 dB → below 1e-6 sim floor at 6+ dB | `reports/ber_full_awgn.csv` |
-| Ensemble-averaged Rayleigh BER (200 × 10k bits, transmit-power-SNR) | 4.18e-2 @ 0 dB → 5.2e-4 @ 20 dB | `reports/ber_full_rayleigh.csv` |
-| Test suite | **15 tests**, green on CI matrix (Python 3.11 + 3.12) | `.github/workflows/ci.yml` |
+| Ensemble Rayleigh BER (200 × 10k bits, transmit-power-SNR) | 4.18e-2 @ 0 dB → 5.2e-4 @ 20 dB | `reports/ber_full_rayleigh.csv` |
+| SNR estimator — MAE / R² (synthetic features) | 0.118 dB / **0.999** | `reports/link_estimation_metrics.json` |
+| Channel classifier — accuracy | **0.472** *(honest weak result — surfaced, not hidden)* | same |
+| Test suite | **77 tests**, green on CI matrix (Python 3.11 + 3.12) | `.github/workflows/ci.yml` |
 | End-to-end reproducible | `make verify` | regenerates every committed artifact under `reports/` |
-| Edge deployment path | ONNX export + Jetson benchmark template | `export_onnx.py`, `edge/jetson_benchmark_template.py` |
-| Executive dashboard | `reports/dashboard.html` | one HTML page, opens in any browser |
+| Executive dashboard | [`reports/dashboard.html`](https://obiedeh.github.io/wireless-link-intelligence-system/reports/dashboard.html) | one HTML page on GitHub Pages |
 | Tech brief | [TECH_BRIEF.md](TECH_BRIEF.md) | one-page hiring-manager summary |
 
 Full numbers and methodology in [Measured Metrics](#measured-metrics) below. Limitations and what production would require in [Positioning](#positioning).
@@ -43,13 +44,14 @@ Full numbers and methodology in [Measured Metrics](#measured-metrics) below. Lim
 
 These are the concrete decisions that separate a clean physical-layer reference from a notebook with a model in it:
 
-- **Classical baseline first, ML second.** The AWGN BER curve (1e6 bits, deterministic seed) matches textbook Q-function predictions to within the simulation floor. The Rayleigh ensemble-averaged curve (N=200 × 10k bits) shows the classical 1/SNR diversity-1 penalty against AWGN's exponential decay. ML estimators are layered on top of this verified baseline, not in place of it.
-- **No feature leakage.** `fading_abs` and `fading_phase` are saved in the dataset CSV as labels but explicitly excluded from `FEATURE_COLUMNS` in `ai_link_estimation/features.py`. They encode oracle channel knowledge and would trivially inflate any classifier built on them — a non-negotiable rule documented in `AGENTS.md`.
-- **Honest weak result, surfaced.** The channel classifier scores 0.472 on a two-class problem (worse than majority-class). This is reported in the metrics JSON, the README, and the dashboard — useful as a calibrated finding ("the current 12-feature set supports SNR/BER estimation better than channel-type recognition"), not hidden.
-- **Two-pass channel verification.** A bug in earlier revisions had `add_awgn` referencing noise to received power instead of transmit power, making the Rayleigh penalty cancel out at the receiver. It was caught by ensemble measurement, fixed (`add_awgn` gained an optional `reference_power`, `apply_channel` now passes pre-fading transmit power), and verified with a regression gate: `reports/ber_smoke_awgn.csv` must regenerate bit-identically.
-- **ONNX export validated end-to-end.** `export_onnx.py` converts trained estimators to ONNX; `edge/jetson_benchmark_template.py` reads ONNX and benchmarks inference latency. The Jetson latency row is honest `<TO MEASURE>` until hardware lands — the template runs on any host with `onnxruntime` installed.
-- **CI runs on Python 3.11 AND 3.12.** Most portfolio repos pin one version; this one validates both, with pip caching keyed on `pyproject.toml` + `requirements.txt` hashes.
-- **Deterministic everywhere it matters.** `np.random.default_rng(seed)` is threaded through the BER sweep, dataset generation, and model training. The single-realization Rayleigh smoke caveat (seed=7 producing 4.8% BER at 0 dB and zeros above) is explicitly disclosed; the ensemble curve is the right comparison.
+- **CP-OFDM with adaptive QAM — not just QPSK.** `qpsk_link/ofdm.py` implements a 64-subcarrier CP-OFDM modem with Gray-coded square QAM at M = 4 / 16 / 64 / 256. Constellations normalised to unit average symbol energy; Gray property verified by an explicit test that walks the I/Q grid and checks every neighbour pair has Hamming distance exactly 1. The resulting BER vs SNR curves match textbook 5G NR link-adaptation tables.
+- **3GPP TR 38.901 TDL-A / TDL-B / TDL-C channels.** `qpsk_link/tdl_channel.py` transcribes the literal NLOS tap profiles from TR 38.901 §7.7.2 Tables 7.7.2-1/2/3. Block fading per realisation, power normalised so `E[Σ|h|²] = 1`. Ensemble BLER curves committed to `reports/bler_full_tdl_ofdm.csv`. The honest finding (BLER ~10% even at 30 dB without coding) is the signal that motivates LDPC + HARQ — surfaced, not polished away.
+- **Pilot-based channel estimation with LS / MMSE / neural compared head-to-head.** `qpsk_link/channel_estimation.py` runs all three on the same TDL-C realisations and reports both channel-MSE and resulting BLER. The PyTorch MLP is the DeepRx pattern in miniature; the calibrated finding is that neural wins at low SNR (denoising), MMSE wins at high SNR (correct prior + low noise = closed-form optimum). LS lags everywhere.
+- **PyTorch + INT8 ONNX deployment pipeline.** `train_snr_torch.py` trains a small MLP, exports FP32 ONNX, dynamic-PTQ quantises to INT8 ONNX, and benchmarks holdout MAE + file size + CPU latency for all three forms. Measured: ~3.3× CPU latency reduction and ~2× smaller file with sub-0.01 dB accuracy drift — textbook PTQ payoff. INT8 ONNX lands directly on Jetson AGX Thor via `edge/jetson_benchmark_template.py`.
+- **No feature leakage** for the link-condition estimators: `fading_abs` and `fading_phase` are saved in the dataset CSV as labels but excluded from `FEATURE_COLUMNS` in `ai_link_estimation/features.py`. They encode oracle channel knowledge and would trivially inflate any classifier built on them — `AGENTS.md` non-negotiable rule #1.
+- **Two-pass channel verification.** A bug in earlier revisions had `add_awgn` referencing noise to received power instead of transmit power, making the Rayleigh penalty cancel out at the receiver. Caught by ensemble measurement, fixed (`add_awgn` gained an optional `reference_power`, `apply_channel` now passes pre-fading transmit power), and verified with a regression gate: `reports/ber_smoke_awgn.csv` must regenerate bit-identically.
+- **CI runs on Python 3.11 AND 3.12.** Most portfolio repos pin one version; this one validates both, including the PyTorch + ONNX + INT8 quantisation pipeline.
+- **Deterministic everywhere it matters.** `np.random.default_rng(seed)` is threaded through the BER sweep, dataset generation, model training, channel-estimator training, and ONNX export — every committed number is byte-reproducible from the committed seed.
 
 If you are evaluating physical-layer ML engineering: these are the signals that distinguish a reference repo from a tutorial.
 
