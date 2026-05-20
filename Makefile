@@ -1,4 +1,4 @@
-.PHONY: install install-dev test lint run-sim generate-evidence train-evidence validate-evidence verify
+.PHONY: install install-dev test lint run-sim generate-evidence train-evidence dashboard validate-evidence verify
 
 PYTHON ?= .venv/bin/python
 PIP ?= .venv/bin/pip
@@ -36,11 +36,15 @@ generate-evidence: .venv
 train-evidence: .venv
 	$(PYTHON) train_link_models.py --dataset data/link_conditions.csv --output-dir models --report reports/link_estimation_report.md --metrics-report reports/link_estimation_metrics.json
 
+dashboard: .venv
+	$(PYTHON) build_dashboard.py --output-dir reports
+
 validate-evidence:
 	test -s reports/ber_smoke_awgn.csv
 	test -s reports/ber_smoke_awgn.svg
 	test -s reports/link_estimation_report.md
 	test -s reports/link_estimation_metrics.json
+	test -s reports/dashboard.html
 	test -s models/metrics.json
 
-verify: lint test run-sim generate-evidence train-evidence validate-evidence
+verify: lint test run-sim generate-evidence train-evidence dashboard validate-evidence

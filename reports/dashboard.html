@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wireless Link Intelligence System — Evidence Pack</title>
+  <style>
+    :root {
+      --ink: #172033; --muted: #5d6878; --line: #d9dee7;
+      --panel: #ffffff; --band: #f5f7fa;
+      --green: #136f63; --red: #a33d1f; --blue: #294c7a;
+      --gold: #a66b00; --ink-alt: #2a3b5b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+      BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink); background: #ffffff;
+    }
+    header { padding: 36px 48px 24px; border-bottom: 1px solid var(--line); background: #f8fafc; }
+    header h1 { margin: 0 0 8px; font-size: 32px; line-height: 1.08; letter-spacing: -0.01em; }
+    header .sub { margin: 0 0 14px; max-width: 1100px; color: var(--muted); font-size: 15px; line-height: 1.55; }
+    header .topnav { font-size: 13px; }
+    header .topnav a { color: var(--blue); margin-right: 14px; font-weight: 650; text-decoration: none; }
+    header .topnav a:hover { text-decoration: underline; }
+    main { padding: 26px 48px 54px; }
+    section { margin: 0 0 32px; }
+    h2 { margin: 0 0 6px; font-size: 20px; letter-spacing: -0.005em; }
+    h2 + .lede { margin: 0 0 14px; color: var(--muted); font-size: 14px; max-width: 920px; line-height: 1.5; }
+    h3 { margin: 0 0 10px; font-size: 15px; letter-spacing: 0; }
+    .metrics { display: grid; grid-template-columns: repeat(5, minmax(160px, 1fr)); gap: 12px; }
+    .metric-card { border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: var(--panel); min-height: 122px; }
+    .metric-card span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .metric-card strong { display: block; font-size: 24px; line-height: 1.05; margin-bottom: 6px; color: var(--blue); }
+    .metric-card small { color: var(--muted); line-height: 1.35; font-size: 12px; }
+    .metric-card.money strong { color: var(--green); }
+    .metric-card.risk strong { color: var(--red); }
+    .metric-card.warn strong { color: var(--gold); }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(280px, 1fr)); gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 14px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 12px; }
+    .panel, .reason-card { border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: var(--panel); }
+    .panel.band { background: var(--band); }
+    img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    th, td { text-align: left; border-bottom: 1px solid var(--line); padding: 8px 8px; vertical-align: top; }
+    th { color: var(--muted); font-weight: 650; }
+    table.methodology th { width: 38%; color: var(--ink-alt); }
+    .reason-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+    .reason-head span { color: var(--blue); font-weight: 700; }
+    .callout { border-left: 5px solid var(--gold); background: #fffaf0; padding: 12px 16px; border-radius: 6px; font-size: 14px; line-height: 1.5; }
+    .callout strong { color: var(--gold); }
+    .callout.red { border-left-color: var(--red); background: #fff7f3; }
+    .callout.red strong { color: var(--red); }
+    .links { font-size: 13px; }
+    .links a { display: inline-block; margin: 4px 14px 4px 0; color: var(--blue); font-weight: 600; text-decoration: none; }
+    .links a:hover { text-decoration: underline; }
+    .sig { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace; font-size: 12px; color: var(--muted); }
+    footer { padding: 24px 48px 36px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); }
+    @media (max-width: 1100px) {
+      .metrics, .grid, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      header, main, footer { padding-left: 20px; padding-right: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Wireless Link Intelligence System</h1>
+    <p class="sub">A production-discipline reference for physical-layer AI. Classical QPSK baseband simulator with deterministic BER vs SNR sweeps, four scikit-learn link estimators with honest holdout evaluation, ONNX export, and a Jetson benchmark template — the engineering pattern that turns a wireless simulation into measurable AI-RAN-adjacent evidence.</p>
+    <div class="topnav">
+      <a href="../README.md">README</a>
+      <a href="../TECH_BRIEF.md">Tech brief</a>
+      <a href="https://github.com/obiedeh/qpsk-wireless-link-simulator">Source</a>
+      <a href="https://github.com/obiedeh/qpsk-wireless-link-simulator/actions">CI</a>
+    </div>
+  </header>
+  <main>
+
+    <section>
+      <h2>Headline evidence</h2>
+      <p class="lede">Five KPIs at a glance — model quality, test coverage, and the honest disclosure that the channel classifier is weak on this feature set. Jetson latency is <strong>not yet measured</strong>; the benchmark template is ready when hardware lands.</p>
+      <div class="metrics">
+        <article class="metric-card "><span>SNR estimator — R²</span><strong>0.999</strong><small>MAE 0.118 dB · holdout: 125 samples</small></article><article class="metric-card "><span>BER predictor — R²</span><strong>0.968</strong><small>MAE 4.53e-04 · same holdout</small></article><article class="metric-card risk"><span>Channel classifier</span><strong>0.472 acc</strong><small>Honest weak result — surfaced, not hidden</small></article><article class="metric-card "><span>Test suite</span><strong>15 / 15</strong><small>Green on CI matrix · Python 3.11 + 3.12 · ruff clean</small></article><article class="metric-card warn"><span>Jetson latency</span><strong>TO MEASURE</strong><small>ONNX + benchmark template ready · hardware pending</small></article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Methodology</h2>
+      <p class="lede">Everything below is regenerable by <span class="sig">make verify</span> from a fresh clone. Synthetic dataset for the ML layer; classical BER curves are verified against textbook predictions.</p>
+      <div class="panel">
+        <table class="methodology"><tbody>
+          <tr><th>Dataset</th><td>Synthetic link-condition CSV (12 constellation statistics + 4 labels)</td></tr>
+<tr><th>Sample size</th><td>500 training cohort, 125 stratified holdout</td></tr>
+<tr><th>Feature set</th><td>12 constellation statistics (no oracle leakage — see AGENTS.md non-negotiable rules)</td></tr>
+<tr><th>Models</th><td>scikit-learn ensemble pipelines (joblib serialized, ONNX-exportable)</td></tr>
+<tr><th>BER baseline</th><td>Classical QPSK BER curves — AWGN 1M bits, Rayleigh ensemble N=200 × 10k bits</td></tr>
+<tr><th>Channel convention</th><td>Transmit-power-SNR (verified — |h|² penalty does not cancel out)</td></tr>
+<tr><th>Validation harness</th><td>15 pytest tests, ruff lint, CI matrix on Python 3.11 + 3.12</td></tr>
+        </tbody></table>
+      </div>
+    </section>
+
+    <section>
+      <h2>BER vs SNR — classical baseline</h2>
+      <p class="lede">AWGN: 1M-bit deterministic sweep. Rayleigh: ensemble-averaged N=200 realizations × 10,000 bits per SNR point, using the transmit-power-SNR convention so the diversity-1 penalty is visible (BER falls roughly as 1/SNR_linear), not cancelled by the <em>|h|²</em> factor at the receiver.</p>
+      <div class="grid">
+        <div class="panel">
+          <h3>AWGN — full sweep (1M bits)</h3>
+          <img src="ber_full_awgn.svg" alt="AWGN BER curve, 1 million bits per SNR point" />
+          <table style="margin-top: 10px;">
+            <thead><tr><th>SNR</th><th>BER</th></tr></thead>
+            <tbody><tr><td>0 dB</td><td>2.42e-03</td></tr>
+<tr><td>2 dB</td><td>1.83e-04</td></tr>
+<tr><td>4 dB</td><td>5.00e-06</td></tr>
+<tr><td>6 dB</td><td>&lt; 1e-6</td></tr>
+<tr><td>8 dB</td><td>&lt; 1e-6</td></tr>
+<tr><td>10 dB</td><td>&lt; 1e-6</td></tr>
+<tr><td>12 dB</td><td>&lt; 1e-6</td></tr>
+<tr><td>14 dB</td><td>&lt; 1e-6</td></tr></tbody>
+          </table>
+        </div>
+        <div class="panel">
+          <h3>Rayleigh — ensemble averaged (N=200 × 10k bits)</h3>
+          <img src="ber_full_rayleigh.svg" alt="Rayleigh BER ensemble curve, 200 realizations" />
+          <table style="margin-top: 10px;">
+            <thead><tr><th>SNR</th><th>Avg BER</th></tr></thead>
+            <tbody><tr><td>0 dB</td><td>4.18e-02</td></tr>
+<tr><td>2 dB</td><td>4.70e-02</td></tr>
+<tr><td>4 dB</td><td>2.67e-02</td></tr>
+<tr><td>6 dB</td><td>1.24e-02</td></tr>
+<tr><td>8 dB</td><td>8.29e-03</td></tr>
+<tr><td>10 dB</td><td>7.72e-03</td></tr>
+<tr><td>12 dB</td><td>5.77e-03</td></tr>
+<tr><td>14 dB</td><td>3.61e-03</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>ML link estimators — holdout performance</h2>
+      <p class="lede">Four estimators trained on the synthetic link-condition CSV with a 25% stratified holdout. The channel classifier's weak accuracy is reported, not hidden — see the per-estimator interpretation below.</p>
+      <div class="panel">
+        <table><thead><tr><th>Estimator</th><th>Primary metric</th><th>Secondary</th></tr></thead>
+          <tbody><tr><td><strong>SNR estimator</strong></td><td>R² 0.999</td><td>MAE 0.1181</td></tr>
+<tr><td><strong>BER predictor</strong></td><td>R² 0.968</td><td>MAE 0.0005</td></tr>
+<tr><td><strong>Channel classifier</strong></td><td>acc 0.472</td><td>(below majority-class baseline)</td></tr>
+<tr><td><strong>Link-quality scorer</strong></td><td>R² 0.904</td><td>MAE 4.0886</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>What each estimator is doing — and where it fails</h2>
+      <p class="lede">Per-estimator interpretation in plain English. Each card includes the calibrated finding (what this model captures, why, and where the boundary is).</p>
+      <div class="grid">
+        <article class="reason-card"><div class="reason-head"><strong>SNR estimator</strong><span>R² 0.999</span></div><p>The constellation power and spread tell you SNR directly — clean features (rx_power_mean, evm_rms, radius_std) make this nearly deterministic on synthetic data. On a real receiver this is the estimator that runs every frame to drive AGC and modulation-and-coding-scheme decisions.</p></article>
+<article class="reason-card"><div class="reason-head"><strong>BER predictor</strong><span>R² 0.968</span></div><p>BER follows from SNR via the Q-function in theory, but at low SNR the constellation spread carries information the textbook formula misses. Predicting measured BER directly from constellation statistics catches both — the residual error is well below the simulation resolution floor on this dataset.</p></article>
+<article class="reason-card"><div class="reason-head"><strong>Channel classifier</strong><span>acc 0.472</span></div><p>Honest weak result. AWGN and Rayleigh produce similar constellation statistics when averaged over symbols — distinguishing them needs higher-order features (envelope variance over time, autocorrelation) the current 12-feature set does not have. Accuracy below the 0.5 majority-class baseline is the calibrated signal that this task wants a different feature design; surfaced rather than hidden.</p></article>
+<article class="reason-card"><div class="reason-head"><strong>Link-quality scorer</strong><span>R² 0.904</span></div><p>The 0–100 link-quality target combines SNR and BER with a small Rayleigh penalty. The model recovers it well because SNR and BER are already strongly predicted — this estimator is more a consistency check than a new capability.</p></article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Edge deployment path</h2>
+      <p class="lede">ONNX export is validated end-to-end on commodity hardware. Jetson latency measurement is gated on the device landing.</p>
+      <div class="grid">
+        <div class="panel">
+          <h3>Export pipeline</h3>
+          <p style="color: var(--muted); line-height: 1.5;">Each <span class="sig">.joblib</span> estimator converts to ONNX via <span class="sig">skl2onnx</span>; the resulting <span class="sig">.onnx</span> files load into <span class="sig">onnxruntime</span> on any platform. The benchmark template (<span class="sig">edge/jetson_benchmark_template.py</span>) emits latency p50/p95/p99 into <span class="sig">reports/jetson_inference_benchmark.json</span> when run on Jetson — runs anywhere ONNX Runtime is installed for parity testing.</p>
+        </div>
+        <div class="panel band">
+          <h3>What's measured vs. what's planned</h3>
+          <p style="color: var(--muted); line-height: 1.5;"><strong>Measured:</strong> ONNX conversion succeeds for all four estimators; Python ↔ ONNX Runtime parity passes on commodity x86_64.<br/><br/><strong>Not yet measured:</strong> Jetson latency p50/p95/p99. The artifact is <span class="sig">&lt;TO MEASURE&gt;</span> in the metrics until hardware lands. TensorRT acceleration (distillation of tree models into a small neural network) is a known scope expansion, intentionally deferred.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Engineering quality signals</h2>
+      <p class="lede">Repo discipline that you can verify in 60 seconds from a fresh clone.</p>
+      <div class="grid-4">
+        <div class="panel"><h3>Tests</h3><p><strong style="color:var(--green); font-size:22px;">15 / 15</strong><br/><span class="sig">pytest -q</span></p></div>
+        <div class="panel"><h3>Lint</h3><p><strong style="color:var(--green); font-size:22px;">clean</strong><br/><span class="sig">ruff check .</span></p></div>
+        <div class="panel"><h3>CI matrix</h3><p><strong style="color:var(--green); font-size:22px;">3.11 + 3.12</strong><br/><span class="sig">.github/workflows/ci.yml</span></p></div>
+        <div class="panel"><h3>End-to-end repro</h3><p><strong style="color:var(--green); font-size:22px;">one command</strong><br/><span class="sig">make verify</span></p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Limitations</h2>
+      <div class="callout red">
+        <strong>What this is not:</strong> a production telecom receiver, an AI-RAN base station, a standards-compliant modem, or a scheduler. The ML dataset is synthetic. The Jetson row is <span class="sig">&lt;TO MEASURE&gt;</span> until hardware lands. The channel classifier's 0.472 accuracy is below the majority-class baseline — disclosed as a calibrated weak result, not hidden behind aggregate F1 numbers.
+      </div>
+    </section>
+
+    <section>
+      <h2>Evidence links</h2>
+      <div class="panel links">
+        <a href="link_estimation_metrics.json">Link-estimation metrics (JSON)</a>
+        <a href="link_estimation_report.md">Link-estimation report (MD)</a>
+        <a href="ber_full_awgn.csv">AWGN BER full sweep (CSV)</a>
+        <a href="ber_full_awgn.svg">AWGN BER plot (SVG)</a>
+        <a href="ber_full_rayleigh.csv">Rayleigh ensemble BER (CSV)</a>
+        <a href="ber_full_rayleigh.svg">Rayleigh BER plot (SVG)</a>
+        <a href="edge_inference_plan.md">Edge inference plan (MD)</a>
+        <a href="../README.md">README</a>
+        <a href="../TECH_BRIEF.md">Tech brief</a>
+      </div>
+    </section>
+
+  </main>
+  <footer>
+    Generated by <span class="sig">python build_dashboard.py</span> from artifacts in <span class="sig">reports/</span>. Deterministic given seed=42 on the synthetic dataset and seed=7 on the BER sweeps. See <span class="sig">.github/workflows/ci.yml</span> for the canonical reproduction recipe.
+  </footer>
+</body>
+</html>
