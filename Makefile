@@ -36,6 +36,9 @@ run-sim-ofdm: .venv
 run-sim-tdl: .venv
 	$(PYTHON) run_sim_tdl.py --num-bits 4096 --n-realizations 80 --seed 7 --output-csv reports/bler_full_tdl_ofdm.csv --output-plot reports/bler_full_tdl_ofdm.svg
 
+channel-estimation: .venv
+	$(PYTHON) run_channel_estimation_comparison.py --seed 7 --output-csv reports/channel_estimation_comparison.csv --output-plot reports/channel_estimation_comparison.svg
+
 generate-evidence: .venv
 	$(PYTHON) generate_dataset.py --output data/link_conditions.csv --samples 120 --num-bits 1200 --seed 7
 
@@ -55,6 +58,8 @@ validate-evidence:
 	test -s reports/ber_full_ofdm_awgn.svg
 	test -s reports/bler_full_tdl_ofdm.csv
 	test -s reports/bler_full_tdl_ofdm.svg
+	test -s reports/channel_estimation_comparison.csv
+	test -s reports/channel_estimation_comparison.svg
 	test -s models/metrics.json
 
-verify: lint test run-sim run-sim-ofdm run-sim-tdl generate-evidence train-evidence dashboard validate-evidence
+verify: lint test run-sim run-sim-ofdm run-sim-tdl channel-estimation generate-evidence train-evidence dashboard validate-evidence
