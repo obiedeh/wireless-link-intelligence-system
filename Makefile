@@ -33,6 +33,9 @@ run-sim-rayleigh-full: .venv
 run-sim-ofdm: .venv
 	$(PYTHON) run_sim_ofdm.py --num-bits 50000 --seed 7 --output-csv reports/ber_full_ofdm_awgn.csv --output-plot reports/ber_full_ofdm_awgn.svg
 
+run-sim-tdl: .venv
+	$(PYTHON) run_sim_tdl.py --num-bits 4096 --n-realizations 80 --seed 7 --output-csv reports/bler_full_tdl_ofdm.csv --output-plot reports/bler_full_tdl_ofdm.svg
+
 generate-evidence: .venv
 	$(PYTHON) generate_dataset.py --output data/link_conditions.csv --samples 120 --num-bits 1200 --seed 7
 
@@ -50,6 +53,8 @@ validate-evidence:
 	test -s reports/dashboard.html
 	test -s reports/ber_full_ofdm_awgn.csv
 	test -s reports/ber_full_ofdm_awgn.svg
+	test -s reports/bler_full_tdl_ofdm.csv
+	test -s reports/bler_full_tdl_ofdm.svg
 	test -s models/metrics.json
 
-verify: lint test run-sim run-sim-ofdm generate-evidence train-evidence dashboard validate-evidence
+verify: lint test run-sim run-sim-ofdm run-sim-tdl generate-evidence train-evidence dashboard validate-evidence
