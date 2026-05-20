@@ -25,18 +25,16 @@ run-sim = "run_sim:main"
 
 [tool.setuptools]
 py-modules = [
-    "channel",
     "export_onnx",
     "generate_dataset",
-    "plots",
-    "qpsk_modem",
     "run_sim",
+    "run_sim_ensemble",
     "train_link_models",
 ]
 
 [tool.setuptools.packages.find]
-include = ["ai_link_estimation*"]
-exclude = ["reports*", "tests*", "edge*"]
+include = ["ai_link_estimation*", "qpsk_link*"]
+exclude = ["reports*", "tests*", "edge*", "notebooks*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

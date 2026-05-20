@@ -8,8 +8,8 @@ from pathlib import Path
 
 import numpy as np
 
-from channel import apply_channel
-from qpsk_modem import qpsk_demodulate, qpsk_modulate, recover_qpsk_symbols
+from qpsk_link.channel import apply_channel
+from qpsk_link.modem import qpsk_demodulate, qpsk_modulate, recover_qpsk_symbols
 
 from .features import FEATURE_COLUMNS, constellation_statistics, link_quality_score
 
