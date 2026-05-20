@@ -45,6 +45,9 @@ jobs:
       - name: Run BER smoke simulation
         run: python run_sim.py --num-bits 1000 --snr-min 0 --snr-max 6 --snr-step 3 --seed 7 --output-csv reports/ber_smoke_awgn.csv --output-plot reports/ber_smoke_awgn.svg
 
+      - name: Run OFDM adaptive-QAM BER sweep
+        run: python run_sim_ofdm.py --num-bits 5000 --snr-min 0 --snr-max 24 --snr-step 6 --seed 7 --output-csv reports/ber_full_ofdm_awgn.csv --output-plot reports/ber_full_ofdm_awgn.svg
+
       - name: Generate evidence dataset
         run: python generate_dataset.py --output data/link_conditions.csv --samples 60 --num-bits 800 --seed 7
 
@@ -61,4 +64,6 @@ jobs:
           test -s reports/link_estimation_report.md
           test -s reports/link_estimation_metrics.json
           test -s reports/dashboard.html
+          test -s reports/ber_full_ofdm_awgn.csv
+          test -s reports/ber_full_ofdm_awgn.svg
           test -s models/metrics.json
