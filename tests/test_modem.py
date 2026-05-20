@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from qpsk_modem import (
+from qpsk_link.modem import (
     bits_to_qpsk,
     qpsk_demodulate,
     qpsk_modulate,
@@ -55,7 +55,7 @@ def test_qpsk_modulate_demodulate_zero_noise():
 
 
 def test_qpsk_demodulate_high_snr_low_ber():
-    from channel import apply_channel
+    from qpsk_link.channel import apply_channel
 
     rng = np.random.default_rng(7)
     bits = rng.integers(0, 2, 4000)

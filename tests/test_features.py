@@ -1,11 +1,5 @@
-import sys
-from pathlib import Path
-
 import numpy as np
 import pytest
-
-# Ensure project root is on path so bare imports (channel, qpsk_modem) resolve
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from ai_link_estimation.dataset import CSV_COLUMNS, simulate_link_sample
 from ai_link_estimation.features import (

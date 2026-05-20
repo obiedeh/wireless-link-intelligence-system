@@ -24,22 +24,25 @@ Never edit `.ipynb` files for algorithmic changes.
 ## Repository Structure
 
 ```
-qpsk_modem.py                    # Modem: QPSK mapper, RRC filter, matched filter, demod
-channel.py                       # Channel: AWGN + flat Rayleigh fading
-plots.py                         # Visualization: BER curves, constellation plots
-run_sim.py                       # CLI: BER sweep (--fading, --num-bits, --snr-min/max/step)
-generate_dataset.py              # CLI: synthetic link-condition CSV generation
-train_link_models.py             # CLI: train SNR/BER/channel/quality estimators
-export_onnx.py                   # CLI: export trained models to ONNX
-edge/jetson_benchmark_template.py  # ONNX Runtime latency benchmark for Jetson
-ai_link_estimation/
-  features.py    # FEATURE_COLUMNS, constellation_statistics, link_quality_score
-  dataset.py     # simulate_link_sample, generate_dataset, CSV schema
-  models.py      # train_models, write_comparison_report
-  onnx_export.py # export_models
+qpsk_link/                          # DSP package
+  modem.py                          # QPSK mapper, RRC filter, matched filter, demod
+  channel.py                        # AWGN + flat Rayleigh fading (transmit-power-SNR)
+  plots.py                          # BER curves, constellation plots
+ai_link_estimation/                 # ML link-estimation package
+  features.py                       # FEATURE_COLUMNS, constellation_statistics, link_quality_score
+  dataset.py                        # simulate_link_sample, generate_dataset, CSV schema
+  models.py                         # train_models, write_comparison_report
+  onnx_export.py                    # export_models
+run_sim.py                          # CLI: BER sweep (--fading, --num-bits, --snr-min/max/step)
+run_sim_ensemble.py                 # CLI: ensemble-averaged Rayleigh BER sweep
+generate_dataset.py                 # CLI: synthetic link-condition CSV generation
+train_link_models.py                # CLI: train SNR/BER/channel/quality estimators
+export_onnx.py                      # CLI: export trained models to ONNX
+edge/jetson_benchmark_template.py   # ONNX Runtime latency benchmark for Jetson
 tests/
-  test_modem.py    # Unit tests: DSP functions
-  test_features.py # Unit tests: ML feature extraction and quality score
+  test_modem.py                     # Unit tests: DSP functions
+  test_features.py                  # Unit tests: ML feature extraction and quality score
+notebooks/legacy/                   # Original exploration notebooks (provenance only)
 ```
 
 ## Non-Negotiable Rules
@@ -79,7 +82,7 @@ python edge/jetson_benchmark_template.py --model models/onnx/snr_estimator.onnx
 
 ## Adding New Features
 
-- New DSP algorithms → `qpsk_modem.py` or `channel.py`, with unit tests in `tests/test_modem.py`
+- New DSP algorithms → `qpsk_link/modem.py` or `qpsk_link/channel.py`, with unit tests in `tests/test_modem.py`
 - New ML features → update `FEATURE_COLUMNS` in `features.py` AND regenerate the dataset
 - New channel models → update `apply_channel` signature stays `(tx_signal, snr_db, fading) -> (rx_signal, h)`
 - New estimators → add to `MODEL_SPECS` in `models.py`

@@ -5,8 +5,8 @@ from pathlib import Path
 import matplotlib
 import numpy as np
 
-from channel import apply_channel
-from qpsk_modem import qpsk_demodulate, qpsk_modulate
+from qpsk_link.channel import apply_channel
+from qpsk_link.modem import qpsk_demodulate, qpsk_modulate
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
