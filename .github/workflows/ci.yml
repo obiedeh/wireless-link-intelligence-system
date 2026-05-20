@@ -51,10 +51,14 @@ jobs:
       - name: Train link estimators
         run: python train_link_models.py --dataset data/link_conditions.csv --output-dir models --report reports/link_estimation_report.md --metrics-report reports/link_estimation_metrics.json
 
+      - name: Build dashboard
+        run: python build_dashboard.py --output-dir reports
+
       - name: Validate evidence artifacts
         run: |
           test -s reports/ber_smoke_awgn.csv
           test -s reports/ber_smoke_awgn.svg
           test -s reports/link_estimation_report.md
           test -s reports/link_estimation_metrics.json
+          test -s reports/dashboard.html
           test -s models/metrics.json
