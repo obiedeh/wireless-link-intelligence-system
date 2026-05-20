@@ -1,0 +1,42 @@
+{
+  "config": {
+    "epochs": 80,
+    "hidden1": 64,
+    "hidden2": 32,
+    "input_features": [
+      "rx_power_mean",
+      "rx_power_std",
+      "real_mean",
+      "imag_mean",
+      "real_std",
+      "imag_std",
+      "iq_covariance",
+      "radius_mean",
+      "radius_std",
+      "phase_std",
+      "evm_rms",
+      "quadrant_balance"
+    ],
+    "n_holdout": 100,
+    "n_samples": 500,
+    "seed": 42
+  },
+  "interpretation": "Dynamic INT8 quantisation typically incurs <0.05 dB MAE drift on a small MLP regression task. The expected payoff is ~3-4\u00d7 smaller model file and ~1.5-3\u00d7 faster inference on CPU. Latency on Jetson AGX Thor is reported separately in reports/jetson_inference_benchmark.json.",
+  "onnx_fp32": {
+    "file_size_bytes": 12445,
+    "latency_us_per_sample": 46.109899994917214,
+    "mae_db": 0.28685242727152244
+  },
+  "onnx_int8": {
+    "file_size_bytes": 6487,
+    "latency_us_per_sample": 13.767600059509277,
+    "mae_db": 0.2797922193724372
+  },
+  "pytorch_fp32": {
+    "mae_db": 0.28685245766989126
+  },
+  "sklearn_baseline": {
+    "mae_db": 0.07463915863831914,
+    "model_path": "models\\snr_estimator.joblib"
+  }
+}

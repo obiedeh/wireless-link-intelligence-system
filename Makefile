@@ -39,6 +39,9 @@ run-sim-tdl: .venv
 channel-estimation: .venv
 	$(PYTHON) run_channel_estimation_comparison.py --seed 7 --output-csv reports/channel_estimation_comparison.csv --output-plot reports/channel_estimation_comparison.svg
 
+snr-torch: .venv
+	$(PYTHON) train_snr_torch.py --dataset data/link_conditions.csv --metrics-output reports/snr_quantization_comparison.json
+
 generate-evidence: .venv
 	$(PYTHON) generate_dataset.py --output data/link_conditions.csv --samples 120 --num-bits 1200 --seed 7
 
@@ -60,6 +63,9 @@ validate-evidence:
 	test -s reports/bler_full_tdl_ofdm.svg
 	test -s reports/channel_estimation_comparison.csv
 	test -s reports/channel_estimation_comparison.svg
+	test -s reports/snr_quantization_comparison.json
+	test -s models/onnx/snr_estimator_fp32.onnx
+	test -s models/onnx/snr_estimator_int8.onnx
 	test -s models/metrics.json
 
-verify: lint test run-sim run-sim-ofdm run-sim-tdl channel-estimation generate-evidence train-evidence dashboard validate-evidence
+verify: lint test run-sim run-sim-ofdm run-sim-tdl channel-estimation generate-evidence train-evidence snr-torch dashboard validate-evidence

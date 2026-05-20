@@ -35,7 +35,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install --index-url https://download.pytorch.org/whl/cpu "torch>=2.2"
-          pip install -e ".[dev,ml]"
+          pip install onnxscript
+          pip install -e ".[dev,ml,edge]"
 
       - name: Lint (ruff)
         run: ruff check .
@@ -61,6 +62,9 @@ jobs:
       - name: Train link estimators
         run: python train_link_models.py --dataset data/link_conditions.csv --output-dir models --report reports/link_estimation_report.md --metrics-report reports/link_estimation_metrics.json
 
+      - name: Train PyTorch SNR estimator + INT8 ONNX
+        run: python train_snr_torch.py --dataset data/link_conditions.csv --metrics-output reports/snr_quantization_comparison.json --epochs 50
+
       - name: Build dashboard
         run: python build_dashboard.py --output-dir reports
 
@@ -77,4 +81,7 @@ jobs:
           test -s reports/bler_full_tdl_ofdm.svg
           test -s reports/channel_estimation_comparison.csv
           test -s reports/channel_estimation_comparison.svg
+          test -s reports/snr_quantization_comparison.json
+          test -s models/onnx/snr_estimator_fp32.onnx
+          test -s models/onnx/snr_estimator_int8.onnx
           test -s models/metrics.json
