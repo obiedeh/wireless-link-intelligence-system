@@ -4,7 +4,7 @@
 
 The deliverable is the engineering pattern, not a production receiver. Every BER number is regenerable from a deterministic seed; every ML metric is reported on a stratified holdout; the channel classifier's weak 0.472 accuracy is surfaced as a calibrated finding rather than hidden in a footnote.
 
-> **▶ Open the live dashboard** *(GitHub Pages link added after deploy)* &nbsp;·&nbsp; [Tech brief](TECH_BRIEF.md) &nbsp;·&nbsp; [Source code](https://github.com/obiedeh/qpsk-wireless-link-simulator)
+> **▶ [Open the live dashboard](https://obiedeh.github.io/wireless-link-intelligence-system/reports/dashboard.html)** &nbsp;·&nbsp; [Tech brief](TECH_BRIEF.md) &nbsp;·&nbsp; [Source code](https://github.com/obiedeh/wireless-link-intelligence-system)
 
 ---
 
@@ -204,8 +204,8 @@ BER + constellation statistics
 Primary target: Linux / macOS / Windows. Core simulator runs on standard CPU Python. Jetson usage is the optional ONNX Runtime benchmark path after models are exported.
 
 ```bash
-git clone https://github.com/obiedeh/qpsk-wireless-link-simulator.git
-cd qpsk-wireless-link-simulator
+git clone https://github.com/obiedeh/wireless-link-intelligence-system.git
+cd wireless-link-intelligence-system
 python -m venv .venv
 source .venv/bin/activate          # PowerShell: .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt

@@ -20,7 +20,7 @@ import json
 from html import escape
 from pathlib import Path
 
-_REPO_URL = "https://github.com/obiedeh/qpsk-wireless-link-simulator"
+_REPO_URL = "https://github.com/obiedeh/wireless-link-intelligence-system"
 
 
 def _read_metrics(path: Path) -> dict:

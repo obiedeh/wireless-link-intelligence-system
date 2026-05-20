@@ -78,8 +78,8 @@ The **non-negotiable rule** in `AGENTS.md` enforces no feature leakage: `fading_
 ## Engineering signals you can verify in 60 seconds
 
 ```bash
-git clone https://github.com/obiedeh/qpsk-wireless-link-simulator.git
-cd qpsk-wireless-link-simulator
+git clone https://github.com/obiedeh/wireless-link-intelligence-system.git
+cd wireless-link-intelligence-system
 make install-dev
 make verify
 ```
@@ -116,8 +116,8 @@ None of these are large; they're scope decisions tied to a specific RF or AI-RAN
 
 ```bash
 # 1. Clone and install
-git clone https://github.com/obiedeh/qpsk-wireless-link-simulator.git
-cd qpsk-wireless-link-simulator
+git clone https://github.com/obiedeh/wireless-link-intelligence-system.git
+cd wireless-link-intelligence-system
 python -m venv .venv
 source .venv/bin/activate    # or .\.venv\Scripts\activate on Windows
 pip install -r requirements.txt
