@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "qpsk-wireless-link-simulator"
 version = "0.1.0"
-description = "Classical QPSK baseband simulator with AI-assisted link estimation"
+description = "Wireless Link Intelligence System. Production-discipline reference for physical-layer AI: classical QPSK baseband simulator with deterministic BER sweeps, ML link estimators on a stratified holdout, ONNX export, and a Jetson benchmark template."
 requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.26",

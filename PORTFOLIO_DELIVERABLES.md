@@ -1,6 +1,6 @@
-# Portfolio Deliverables
+# Portfolio Deliverables — Wireless Link Intelligence System
 
-This repository is scoped to a reproducible wireless engineering testbed: classical QPSK simulation plus a small AI-assisted link-estimation workflow.
+Production-discipline reference for physical-layer AI: a classical QPSK simulator with deterministic BER sweeps, four ML link estimators with honest holdout evaluation, and an ONNX export path validated against a Jetson benchmark template. All scoped to a measurable testbed — not a production receiver.
 
 ## One-Command Checks
 
@@ -32,6 +32,8 @@ Generated training data and model binaries are intentionally not committed. They
 
 ## Credibility Boundary
 
-This is not a production modem, AI-RAN base station, scheduler, or standards-compliant receiver. It is a measurable simulation and edge-inference preparation repo.
+This is not a production modem, AI-RAN base station, scheduler, or standards-compliant receiver. It is a measurable simulation testbed and edge-inference preparation repo.
 
-Jetson evidence remains limited to the ONNX benchmark template until real device latency artifacts are committed.
+Jetson evidence remains limited to the ONNX benchmark template until real device latency artifacts are committed. The classifier accuracy result (0.472) is the calibrated finding that the current 12-feature set supports SNR / BER regression much more strongly than channel-type discrimination — surfaced, not hidden.
+
+See [TECH_BRIEF.md](TECH_BRIEF.md) for the one-page hiring-manager summary.
