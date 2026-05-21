@@ -40,6 +40,21 @@ Full numbers and methodology in [Measured Metrics](#measured-metrics) below. Lim
 
 ---
 
+## Dashboard Evidence
+
+Open the rendered dashboard here: [reports/dashboard.html](https://obiedeh.github.io/wireless-link-intelligence-system/reports/dashboard.html).
+
+It summarizes:
+
+- adaptive QAM BER across CP-OFDM QPSK / 16-QAM / 64-QAM / 256-QAM
+- 3GPP TR 38.901 TDL-A/B/C BLER multipath stress behavior
+- LS vs MMSE vs neural channel-estimation comparison
+- ONNX FP32/INT8 deployment path and quantization trade-off
+- weak channel classifier result disclosed instead of hidden
+- Jetson AGX Thor benchmark template ready, with latency marked pending until measured
+
+---
+
 ## Engineering practices that matter here
 
 These are the concrete decisions that separate a clean physical-layer reference from a notebook with a model in it:

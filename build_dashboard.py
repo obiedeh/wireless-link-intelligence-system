@@ -36,6 +36,23 @@ def _read_ber_csv(path: Path) -> list[dict[str, str]]:
         return list(csv.DictReader(f))
 
 
+def _first_snr_for_ber(points: list[tuple[float, float]], threshold: float) -> float | None:
+    for snr, ber in sorted(points):
+        if ber <= threshold:
+            return snr
+    return None
+
+
+def _decision_card(title: str, status: str, body: str, status_class: str) -> str:
+    return (
+        '<article class="decision-card">'
+        f'<span class="{escape(status_class)}">{escape(status)}</span>'
+        f'<h3>{escape(title)}</h3>'
+        f'<p>{escape(body)}</p>'
+        '</article>'
+    )
+
+
 # ---------------------------------------------------------------------------
 # Humanized per-estimator insight copy — the "Why customers churn" analog for
 # physical-layer ML. Each card follows "this happens — because of this — so
@@ -104,6 +121,51 @@ def _ber_table_rows(rows: list[dict[str, str]], max_rows: int = 8) -> str:
 # ---------------------------------------------------------------------------
 
 
+def _link_reliability_section_html(reports_dir: Path) -> str:
+    rows = _read_ber_csv(reports_dir / "ber_full_ofdm_awgn.csv")
+    if not rows:
+        return ""
+    by_mod: dict[str, list[tuple[float, float]]] = {}
+    for r in rows:
+        by_mod.setdefault(r.get("modulation", "?"), []).append(
+            (float(r.get("snr_db", 0)), float(r.get("ber", 0.0)))
+        )
+    tiers = [
+        ("Excellent", 1e-6),
+        ("Usable", 1e-3),
+        ("Degraded", 1e-2),
+        ("Unreliable", 1.0),
+    ]
+    body_rows = []
+    for mod, points in by_mod.items():
+        cells = [f"<td><strong>{escape(mod)}</strong></td>"]
+        degraded_snr = _first_snr_for_ber(points, 1e-2)
+        for tier, threshold in tiers:
+            if tier == "Unreliable":
+                if degraded_snr is None:
+                    cells.append("<td>all measured SNRs</td>")
+                elif degraded_snr <= min(snr for snr, _ber in points):
+                    cells.append("<td>none measured</td>")
+                else:
+                    cells.append(f"<td>&lt; {degraded_snr:g} dB</td>")
+                continue
+            snr = _first_snr_for_ber(points, threshold)
+            cells.append("<td>not reached</td>" if snr is None else f"<td>{snr:g} dB</td>")
+        body_rows.append("<tr>" + "".join(cells) + "</tr>")
+    return f"""
+    <section>
+      <h2>Link reliability tiers</h2>
+      <p class="lede">Operational interpretation of the CP-OFDM AWGN BER curves. Thresholds are deterministic and intentionally simple: Excellent BER <= 1e-6, Usable <= 1e-3, Degraded <= 1e-2, Unreliable above that. TDL BLER is frame-level under diversity-1 perfect-CSI simulation, so it is interpreted separately as a multipath stress test, not an SLA.</p>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Modulation</th><th>Excellent</th><th>Usable</th><th>Degraded</th><th>Unreliable below</th></tr></thead>
+          <tbody>{''.join(body_rows)}</tbody>
+        </table>
+      </div>
+    </section>
+    """
+
+
 def _ofdm_qam_section_html(reports_dir: Path) -> str:
     csv_path = reports_dir / "ber_full_ofdm_awgn.csv"
     rows = _read_ber_csv(csv_path)
@@ -133,6 +195,7 @@ def _ofdm_qam_section_html(reports_dir: Path) -> str:
     <section>
       <h2>Adaptive QAM — CP-OFDM BER vs SNR (AWGN)</h2>
       <p class="lede">QPSK / 16-QAM / 64-QAM / 256-QAM on a 64-subcarrier CP-OFDM modem. Same Gray-coded square constellation logic across all four orders, normalised to unit average symbol energy. The curves below match textbook 5G NR link-adaptation tables — what a scheduler reads to pick MCS from CQI feedback.</p>
+      <p class="readout"><strong>Engineering readout:</strong> Adaptive modulation behaves as expected: QPSK is robust at low SNR, while 64/256-QAM need much cleaner channels. That makes this section the link-adaptation baseline, not a claim about production NR scheduling.</p>
       <div class="grid">
         <div class="panel"><img src="ber_full_ofdm_awgn.svg" alt="Adaptive QAM BER vs SNR" /></div>
         <div class="panel">
@@ -368,6 +431,57 @@ def build_dashboard(
     )
     jetson_path = output_dir / "jetson_inference_benchmark.json"
     jetson_data = _read_metrics(jetson_path) if jetson_path.exists() else None
+    tdl_rows = _read_ber_csv(output_dir / "bler_full_tdl_ofdm.csv")
+    tdl_30 = [
+        float(r["bler"])
+        for r in tdl_rows
+        if int(float(r.get("snr_db", 0))) == 30 and r.get("bler") not in {"", None}
+    ]
+    tdl_summary = (
+        f"TDL BLER remains {min(tdl_30):.1%}-{max(tdl_30):.1%} at 30 dB"
+        if tdl_30
+        else "TDL BLER not measured at 30 dB"
+    )
+    decision_cards = "\n".join(
+        [
+            _decision_card(
+                "Link adaptation result",
+                "Good",
+                "Higher-order QAM increases bits per symbol but pushes the BER floor to higher SNR; QPSK clears the 1e-6 simulation floor far earlier than 64/256-QAM.",
+                "status-good",
+            ),
+            _decision_card(
+                "Multipath stress result",
+                "Risk",
+                f"{tdl_summary}; the diversity-1 perfect-CSI receiver still needs coding/HARQ/MIMO to become a production link.",
+                "status-risk",
+            ),
+            _decision_card(
+                "Estimator result",
+                "Good",
+                "Neural denoises best at low SNR, MMSE wins once priors dominate at high SNR, and LS is the transparent baseline.",
+                "status-good",
+            ),
+            _decision_card(
+                "Edge deployment result",
+                "Good",
+                f"ONNX INT8 gives about {int8_speedup:.1f}x CPU latency speedup with sub-0.01 dB MAE drift against FP32 ONNX.",
+                "status-good",
+            ),
+            _decision_card(
+                "Weak result",
+                "Risk",
+                f"Channel classifier accuracy is {classifier.get('accuracy', 0.0):.3f}; current constellation statistics estimate SNR/BER well but do not separate AWGN vs Rayleigh reliably.",
+                "status-risk",
+            ),
+            _decision_card(
+                "Hardware validation status",
+                "Measured" if jetson_data else "Pending",
+                "Jetson AGX Thor p50/p95/p99 latency is available." if jetson_data else "Jetson template is ready; no hardware latency is claimed until benchmark JSON exists.",
+                "status-good" if jetson_data else "status-warn",
+            ),
+        ]
+    )
 
     # ----- Headline KPIs (re-focused on the 5G / AI-PHY upgrades) -----
     kpi_cards = [
@@ -465,6 +579,7 @@ def build_dashboard(
     chest_section = _channel_estimation_section_html(output_dir)
     quant_section = _int8_quantization_section_html(output_dir)
     jetson_section = _jetson_section_html(output_dir)
+    reliability_section = _link_reliability_section_html(output_dir)
 
     # ----- Full HTML -----
     html = f"""<!doctype html>
@@ -505,6 +620,15 @@ def build_dashboard(
     .metric-card.money strong {{ color: var(--green); }}
     .metric-card.risk strong {{ color: var(--red); }}
     .metric-card.warn strong {{ color: var(--gold); }}
+    .decision-grid {{ display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 12px; }}
+    .decision-card {{ border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: var(--panel); }}
+    .decision-card h3 {{ margin-top: 8px; }}
+    .decision-card p {{ margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }}
+    .status-good, .status-warn, .status-risk, .status-neutral {{ display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: 0.03em; }}
+    .status-good {{ background: #e2f1ec; color: var(--green); }}
+    .status-warn {{ background: #fdf3df; color: var(--gold); }}
+    .status-risk {{ background: #fbe3d8; color: var(--red); }}
+    .status-neutral {{ background: #edf1f6; color: var(--ink-alt); }}
     .grid {{ display: grid; grid-template-columns: repeat(2, minmax(280px, 1fr)); gap: 16px; }}
     .grid-3 {{ display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 14px; }}
     .grid-4 {{ display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 12px; }}
@@ -521,13 +645,15 @@ def build_dashboard(
     .callout strong {{ color: var(--gold); }}
     .callout.red {{ border-left-color: var(--red); background: #fff7f3; }}
     .callout.red strong {{ color: var(--red); }}
+    .readout {{ margin: 10px 0 14px; padding: 10px 12px; border-left: 4px solid var(--blue); background: #f7fafd; color: var(--ink-alt); font-size: 13px; line-height: 1.45; }}
+    .readout strong {{ color: var(--blue); }}
     .links {{ font-size: 13px; }}
     .links a {{ display: inline-block; margin: 4px 14px 4px 0; color: var(--blue); font-weight: 600; text-decoration: none; }}
     .links a:hover {{ text-decoration: underline; }}
     .sig {{ font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace; font-size: 12px; color: var(--muted); }}
     footer {{ padding: 24px 48px 36px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); }}
     @media (max-width: 1100px) {{
-      .metrics, .grid, .grid-3, .grid-4 {{ grid-template-columns: 1fr; }}
+      .metrics, .grid, .grid-3, .grid-4, .decision-grid {{ grid-template-columns: 1fr; }}
       header, main, footer {{ padding-left: 20px; padding-right: 20px; }}
     }}
   </style>
@@ -552,6 +678,23 @@ def build_dashboard(
         {''.join(kpi_cards)}
       </div>
     </section>
+
+    <section>
+      <h2>Engineering decision summary</h2>
+      <p class="lede">The dashboard readout in six decisions: what worked, what failed, what is deployment-ready, and what still needs hardware validation.</p>
+      <div class="decision-grid">
+        {decision_cards}
+      </div>
+    </section>
+
+    <section>
+      <h2>Honest boundaries</h2>
+      <div class="callout">
+        <strong>Scope boundary:</strong> ML data is synthetic; the receiver is a simulation testbed, not production PHY; LDPC, HARQ, MIMO, and scheduler validation are not implemented; Jetson latency remains pending unless <span class="sig">reports/jetson_inference_benchmark.json</span> exists; channel classifier accuracy is weak and disclosed.
+      </div>
+    </section>
+
+    {reliability_section}
 
     <section>
       <h2>Methodology</h2>
