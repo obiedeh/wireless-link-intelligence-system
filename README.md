@@ -141,36 +141,19 @@ cat reports/link_estimation_metrics.json
 
 ## Architecture
 
-```text
-Random Bits
-    |
-    v
-QPSK Mapper (Gray)
-    |
-    v
-Pulse Shaping (Root Raised Cosine)
-    |
-    v
-Wireless Channel (AWGN / Rayleigh, transmit-power-SNR)
-    |
-    v
-Matched Filter + symbol-timing recovery
-    |
-    v
-QPSK Demapper (hard decision)
-    |
-    v
-BER + constellation statistics
-    |
-    +-----> Classical BER vs SNR curve (verified against textbook)
-    |
-    +-----> ML link estimators (SNR / BER / channel type / link quality)
-                    |
-                    v
-            ONNX export
-                    |
-                    v
-            Jetson benchmark template (latency p50/p95/p99)
+```mermaid
+flowchart LR
+    A["Random bits"] --> B["QPSK mapper<br/>(Gray coding)"]
+    B --> C["Pulse shaping<br/>(root-raised cosine)"]
+    C --> D["Wireless channel<br/>AWGN / Rayleigh"]
+    D --> E["Matched filter<br/>symbol timing recovery"]
+    E --> F["QPSK demapper<br/>(hard decision)"]
+    F --> G["BER + constellation statistics"]
+    G --> H["Classical BER vs SNR curve<br/>textbook verification"]
+    G --> I["ML link estimators<br/>SNR / BER / channel / quality"]
+    I --> J["ONNX export"]
+    J --> K["Jetson benchmark template<br/>latency p50 / p95 / p99"]
+    G --> L["Static dashboard<br/>operator engineering readout"]
 ```
 
 ---
