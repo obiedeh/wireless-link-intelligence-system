@@ -36,6 +36,15 @@
     .metric-card.money strong { color: var(--green); }
     .metric-card.risk strong { color: var(--red); }
     .metric-card.warn strong { color: var(--gold); }
+    .decision-grid { display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 12px; }
+    .decision-card { border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: var(--panel); }
+    .decision-card h3 { margin-top: 8px; }
+    .decision-card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .status-good, .status-warn, .status-risk, .status-neutral { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: 0.03em; }
+    .status-good { background: #e2f1ec; color: var(--green); }
+    .status-warn { background: #fdf3df; color: var(--gold); }
+    .status-risk { background: #fbe3d8; color: var(--red); }
+    .status-neutral { background: #edf1f6; color: var(--ink-alt); }
     .grid { display: grid; grid-template-columns: repeat(2, minmax(280px, 1fr)); gap: 16px; }
     .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 14px; }
     .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 12px; }
@@ -52,13 +61,15 @@
     .callout strong { color: var(--gold); }
     .callout.red { border-left-color: var(--red); background: #fff7f3; }
     .callout.red strong { color: var(--red); }
+    .readout { margin: 10px 0 14px; padding: 10px 12px; border-left: 4px solid var(--blue); background: #f7fafd; color: var(--ink-alt); font-size: 13px; line-height: 1.45; }
+    .readout strong { color: var(--blue); }
     .links { font-size: 13px; }
     .links a { display: inline-block; margin: 4px 14px 4px 0; color: var(--blue); font-weight: 600; text-decoration: none; }
     .links a:hover { text-decoration: underline; }
     .sig { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace; font-size: 12px; color: var(--muted); }
     footer { padding: 24px 48px 36px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); }
     @media (max-width: 1100px) {
-      .metrics, .grid, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .metrics, .grid, .grid-3, .grid-4, .decision-grid { grid-template-columns: 1fr; }
       header, main, footer { padding-left: 20px; padding-right: 20px; }
     }
   </style>
@@ -85,6 +96,39 @@
     </section>
 
     <section>
+      <h2>Engineering decision summary</h2>
+      <p class="lede">The dashboard readout in six decisions: what worked, what failed, what is deployment-ready, and what still needs hardware validation.</p>
+      <div class="decision-grid">
+        <article class="decision-card"><span class="status-good">Good</span><h3>Link adaptation result</h3><p>Higher-order QAM increases bits per symbol but pushes the BER floor to higher SNR; QPSK clears the 1e-6 simulation floor far earlier than 64/256-QAM.</p></article>
+<article class="decision-card"><span class="status-risk">Risk</span><h3>Multipath stress result</h3><p>TDL BLER remains 11.2%-20.0% at 30 dB; the diversity-1 perfect-CSI receiver still needs coding/HARQ/MIMO to become a production link.</p></article>
+<article class="decision-card"><span class="status-good">Good</span><h3>Estimator result</h3><p>Neural denoises best at low SNR, MMSE wins once priors dominate at high SNR, and LS is the transparent baseline.</p></article>
+<article class="decision-card"><span class="status-good">Good</span><h3>Edge deployment result</h3><p>ONNX INT8 gives about 3.3x CPU latency speedup with sub-0.01 dB MAE drift against FP32 ONNX.</p></article>
+<article class="decision-card"><span class="status-risk">Risk</span><h3>Weak result</h3><p>Channel classifier accuracy is 0.472; current constellation statistics estimate SNR/BER well but do not separate AWGN vs Rayleigh reliably.</p></article>
+<article class="decision-card"><span class="status-warn">Pending</span><h3>Hardware validation status</h3><p>Jetson template is ready; no hardware latency is claimed until benchmark JSON exists.</p></article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Honest boundaries</h2>
+      <div class="callout">
+        <strong>Scope boundary:</strong> ML data is synthetic; the receiver is a simulation testbed, not production PHY; LDPC, HARQ, MIMO, and scheduler validation are not implemented; Jetson latency remains pending unless <span class="sig">reports/jetson_inference_benchmark.json</span> exists; channel classifier accuracy is weak and disclosed.
+      </div>
+    </section>
+
+    
+    <section>
+      <h2>Link reliability tiers</h2>
+      <p class="lede">Operational interpretation of the CP-OFDM AWGN BER curves. Thresholds are deterministic and intentionally simple: Excellent BER <= 1e-6, Usable <= 1e-3, Degraded <= 1e-2, Unreliable above that. TDL BLER is frame-level under diversity-1 perfect-CSI simulation, so it is interpreted separately as a multipath stress test, not an SLA.</p>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Modulation</th><th>Excellent</th><th>Usable</th><th>Degraded</th><th>Unreliable below</th></tr></thead>
+          <tbody><tr><td><strong>OFDM-QPSK</strong></td><td>14 dB</td><td>10 dB</td><td>8 dB</td><td>&lt; 8 dB</td></tr><tr><td><strong>OFDM-16QAM</strong></td><td>20 dB</td><td>18 dB</td><td>14 dB</td><td>&lt; 14 dB</td></tr><tr><td><strong>OFDM-64QAM</strong></td><td>26 dB</td><td>24 dB</td><td>20 dB</td><td>&lt; 20 dB</td></tr><tr><td><strong>OFDM-256QAM</strong></td><td>not reached</td><td>30 dB</td><td>26 dB</td><td>&lt; 26 dB</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+    
+
+    <section>
       <h2>Methodology</h2>
       <p class="lede">Everything below is regenerable by <span class="sig">make verify</span> from a fresh clone. Synthetic dataset for the ML layer; classical BER curves are verified against textbook predictions.</p>
       <div class="panel">
@@ -105,6 +149,7 @@
     <section>
       <h2>Adaptive QAM — CP-OFDM BER vs SNR (AWGN)</h2>
       <p class="lede">QPSK / 16-QAM / 64-QAM / 256-QAM on a 64-subcarrier CP-OFDM modem. Same Gray-coded square constellation logic across all four orders, normalised to unit average symbol energy. The curves below match textbook 5G NR link-adaptation tables — what a scheduler reads to pick MCS from CQI feedback.</p>
+      <p class="readout"><strong>Engineering readout:</strong> Adaptive modulation behaves as expected: QPSK is robust at low SNR, while 64/256-QAM need much cleaner channels. That makes this section the link-adaptation baseline, not a claim about production NR scheduling.</p>
       <div class="grid">
         <div class="panel"><img src="ber_full_ofdm_awgn.svg" alt="Adaptive QAM BER vs SNR" /></div>
         <div class="panel">
