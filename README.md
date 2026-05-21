@@ -240,6 +240,28 @@ make verify
 
 ---
 
+## Run This Demo
+
+```bash
+make verify
+python build_dashboard.py
+```
+
+Then open the rendered dashboard:
+
+- [Live dashboard](https://obiedeh.github.io/wireless-link-intelligence-system/reports/dashboard.html)
+- [Local artifact](reports/dashboard.html)
+
+For a fast CLI-only path, run:
+
+```bash
+python run_sim.py
+python generate_dataset.py --samples 500 --num-bits 4000
+python train_link_models.py
+```
+
+---
+
 ## AI-assisted link estimation
 
 Generate synthetic link-condition data:
