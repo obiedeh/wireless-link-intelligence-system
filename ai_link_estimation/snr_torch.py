@@ -23,12 +23,9 @@ from pathlib import Path
 import numpy as np
 
 
-# 12 input features that match the existing dataset schema in
-# ai_link_estimation.features.FEATURE_COLUMNS. Imported lazily to avoid
-# circular import at module load.
-def _feature_columns() -> list[str]:
-    from ai_link_estimation.features import FEATURE_COLUMNS
-    return list(FEATURE_COLUMNS)
+def _mae(y_pred: np.ndarray, y_true: np.ndarray) -> float:
+    """Mean absolute error between two flat float arrays."""
+    return float(np.mean(np.abs(y_pred - y_true)))
 
 
 @dataclass
@@ -98,8 +95,10 @@ def train_snr_mlp(
     Xt = torch.tensor(X_train_s, dtype=torch.float32)
     Yt = torch.tensor(y_train.reshape(-1, 1), dtype=torch.float32)
     n = Xt.shape[0]
-    for epoch in range(config.epochs):
-        perm = torch.randperm(n, generator=torch.Generator().manual_seed(config.seed + epoch))
+    gen = torch.Generator()
+    gen.manual_seed(config.seed)
+    for _epoch in range(config.epochs):
+        perm = torch.randperm(n, generator=gen)
         for start in range(0, n, config.batch_size):
             idx = perm[start : start + config.batch_size]
             out = model(Xt[idx])
@@ -112,7 +111,7 @@ def train_snr_mlp(
     model.eval()
     with torch.no_grad():
         y_pred = model(torch.tensor(X_test_s, dtype=torch.float32)).numpy().ravel()
-    holdout_mae = float(np.mean(np.abs(y_pred - y_test)))
+    holdout_mae = _mae(y_pred, y_test)
     return model, scaler, holdout_mae, (X_test_s, y_test)
 
 
@@ -183,7 +182,7 @@ def evaluate_onnx_model(
 
     # MAE
     y_pred = sess.run(None, {input_name: X})[0].ravel()
-    mae = float(np.mean(np.abs(y_pred - y_test)))
+    mae = _mae(y_pred, y_test)
 
     # Latency: time per-sample inference.
     sample = X[:1]
@@ -211,6 +210,4 @@ def evaluate_torch_model(model, X_test_scaled: np.ndarray, y_test: np.ndarray) -
         y_pred = (
             model(torch.tensor(X_test_scaled.astype(np.float32))).numpy().ravel()
         )
-    return {
-        "mae_db": float(np.mean(np.abs(y_pred - y_test))),
-    }
+    return {"mae_db": _mae(y_pred, y_test)}

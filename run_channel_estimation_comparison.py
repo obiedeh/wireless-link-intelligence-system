@@ -125,7 +125,7 @@ def train_neural_estimator(
     torch = estimator.torch
 
     # Generate training set.
-    X_list, Y_list, snr_list = [], [], []
+    X_list, Y_list = [], []
     for _ in range(n_train_examples):
         snr_db = float(rng.uniform(*snr_range_train))
         bits = rng.integers(0, 2, n_data_bits).astype(np.int64)
@@ -147,7 +147,6 @@ def train_neural_estimator(
         y = np.concatenate([true_H.real, true_H.imag])
         X_list.append(x)
         Y_list.append(y)
-        snr_list.append(snr_db)
 
     X = torch.tensor(np.stack(X_list), dtype=torch.float32)
     Y = torch.tensor(np.stack(Y_list), dtype=torch.float32)
@@ -156,9 +155,10 @@ def train_neural_estimator(
     optim = torch.optim.Adam(model.parameters(), lr=lr)
     loss_fn = torch.nn.MSELoss()
     n = X.shape[0]
+    gen = torch.Generator()
+    gen.manual_seed(seed)
     for epoch in range(epochs):
-        # Shuffle deterministically per epoch.
-        perm = torch.randperm(n, generator=torch.Generator().manual_seed(seed + epoch))
+        perm = torch.randperm(n, generator=gen)
         epoch_loss = 0.0
         for start in range(0, n, batch_size):
             idx = perm[start : start + batch_size]

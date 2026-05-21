@@ -25,6 +25,7 @@ it usually doesn't — and that's a perfectly honest result to publish.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 
 import numpy as np
 
@@ -103,6 +104,16 @@ def build_piloted_frame(
 # ---------------------------------------------------------------------------
 
 
+def _ls_pilot_estimate(rx_pilot_grid: np.ndarray, frame: PilotedFrame) -> np.ndarray:
+    """Average received pilots over OFDM symbols and divide by the known pilot value.
+
+    Returns a length-n_pilots complex array — the LS estimate at each pilot
+    subcarrier position. Used by both ls_estimate (which then interpolates to
+    all subcarriers) and mmse_estimate (which feeds into the MMSE filter).
+    """
+    return np.mean(rx_pilot_grid / frame.pilot_value, axis=0)
+
+
 def ls_estimate(
     rx_pilot_grid: np.ndarray,
     frame: PilotedFrame,
@@ -115,8 +126,7 @@ def ls_estimate(
             f"rx_pilot_grid shape {rx_pilot_grid.shape} != "
             f"({frame.n_ofdm_symbols}, {frame.pilot_indices.size})."
         )
-    h_pilot_per_sym = rx_pilot_grid / frame.pilot_value
-    h_pilot = np.mean(h_pilot_per_sym, axis=0)
+    h_pilot = _ls_pilot_estimate(rx_pilot_grid, frame)
 
     # Linear interpolation in real and imag parts separately.
     sc = np.arange(frame.n_subcarriers)
@@ -148,6 +158,27 @@ def _channel_correlation_matrix(
     return (powers * np.exp(exponent)).sum(axis=-1)
 
 
+@lru_cache(maxsize=32)
+def _channel_correlation_matrix_cached(
+    pilot_key: tuple[int, ...],
+    target_key: tuple[int, ...],
+    n_subcarriers: int,
+    delay_spread_samples: float,
+) -> np.ndarray:
+    """Cached wrapper around ``_channel_correlation_matrix``.
+
+    Accepts index arrays as tuples (hashable) so ``lru_cache`` can key on them.
+    In a typical SNR sweep the pilot geometry and delay spread are fixed across
+    all realisations, so the cache hits immediately after the first frame.
+    """
+    return _channel_correlation_matrix(
+        np.asarray(pilot_key, dtype=np.int64),
+        np.asarray(target_key, dtype=np.int64),
+        n_subcarriers,
+        delay_spread_samples,
+    )
+
+
 def mmse_estimate(
     rx_pilot_grid: np.ndarray,
     frame: PilotedFrame,
@@ -157,22 +188,31 @@ def mmse_estimate(
     """MMSE channel estimate using an exponential-delay-profile prior."""
     if rx_pilot_grid.shape != (frame.n_ofdm_symbols, frame.pilot_indices.size):
         raise ValueError("rx_pilot_grid has wrong shape for this frame.")
-    h_pilot_per_sym = rx_pilot_grid / frame.pilot_value
-    h_pilot_ls = np.mean(h_pilot_per_sym, axis=0)
+    h_pilot_ls = _ls_pilot_estimate(rx_pilot_grid, frame)
 
     sc = np.arange(frame.n_subcarriers)
     pilot_idx = frame.pilot_indices
     n_sc = frame.n_subcarriers
 
-    # _channel_correlation_matrix(a, b) returns shape (len(b), len(a)).
-    R_pp = _channel_correlation_matrix(pilot_idx, pilot_idx, n_sc, delay_spread_samples)
-    R_hp = _channel_correlation_matrix(pilot_idx, sc, n_sc, delay_spread_samples)
+    # R_pp and R_hp depend only on frame geometry and channel prior — not on
+    # the received signal — so they are the same for every realization in a
+    # sweep. The cached wrapper avoids recomputing them on every frame.
+    pilot_key = tuple(pilot_idx.tolist())
+    R_pp = _channel_correlation_matrix_cached(
+        pilot_key, pilot_key, n_sc, delay_spread_samples
+    )
+    R_hp = _channel_correlation_matrix_cached(
+        pilot_key, tuple(sc.tolist()), n_sc, delay_spread_samples
+    )
 
     snr_linear = 10.0 ** (snr_db / 10.0)
     noise_var = 1.0 / snr_linear / (abs(frame.pilot_value) ** 2)
 
-    inv = np.linalg.inv(R_pp + noise_var * np.eye(pilot_idx.size, dtype=complex))
-    return R_hp @ inv @ h_pilot_ls
+    # solve is ~2× faster and more numerically stable than explicit inv.
+    w = np.linalg.solve(
+        R_pp + noise_var * np.eye(pilot_idx.size, dtype=complex), h_pilot_ls
+    )
+    return R_hp @ w
 
 
 # ---------------------------------------------------------------------------

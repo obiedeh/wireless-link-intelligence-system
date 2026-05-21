@@ -48,7 +48,7 @@ def _gray_code(i: int) -> int:
 
 
 @cache
-def _pam_gray_tables(L: int) -> tuple[np.ndarray, np.ndarray, dict[int, int]]:
+def _pam_gray_tables(L: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Build Gray-coded PAM lookup tables for an L-level PAM (L ∈ {2,4,8,16}).
 
     Returns
@@ -59,14 +59,15 @@ def _pam_gray_tables(L: int) -> tuple[np.ndarray, np.ndarray, dict[int, int]]:
         Length-L array where ``bits_to_level_idx[g]`` is the natural-order
         index (0..L-1) of the level whose Gray code is ``g``.
     level_idx_to_bits:
-        Inverse mapping: index in natural order → Gray-coded bit pattern.
+        Length-L array where ``level_idx_to_bits[i]`` is the Gray-coded bit
+        pattern for the level at natural index ``i``.
     """
     k = int(np.log2(L))
     if 1 << k != L:
         raise ValueError(f"L must be a power of 2 (got {L}).")
     levels = np.arange(-(L - 1), L, 2, dtype=float)
     bits_to_level_idx = np.zeros(L, dtype=np.int64)
-    level_idx_to_bits: dict[int, int] = {}
+    level_idx_to_bits = np.zeros(L, dtype=np.int64)
     for i in range(L):
         g = _gray_code(i)
         bits_to_level_idx[g] = i
@@ -74,6 +75,7 @@ def _pam_gray_tables(L: int) -> tuple[np.ndarray, np.ndarray, dict[int, int]]:
     return levels, bits_to_level_idx, level_idx_to_bits
 
 
+@cache
 def _qam_normalization(mod_order: int) -> float:
     """Normalization factor so the constellation has unit average symbol energy.
 
@@ -84,6 +86,7 @@ def _qam_normalization(mod_order: int) -> float:
     return float(np.sqrt((2.0 / 3.0) * (mod_order - 1)))
 
 
+@cache
 def constellation(mod_order: int) -> np.ndarray:
     """Return the full M-QAM constellation as a complex array of length M.
 
@@ -165,16 +168,16 @@ def qam_demodulate(symbols: np.ndarray, mod_order: int) -> np.ndarray:
     q_idx = np.clip(np.round((q_amp + (L - 1)) / 2.0).astype(np.int64), 0, L - 1)
 
     # Look up Gray-coded bit patterns for each dimension.
-    idx_to_bits = np.array([level_idx_to_bits[i] for i in range(L)], dtype=np.int64)
-    i_bits_int = idx_to_bits[i_idx]
-    q_bits_int = idx_to_bits[q_idx]
+    # level_idx_to_bits is already a cached ndarray — index directly.
+    i_bits_int = level_idx_to_bits[i_idx]
+    q_bits_int = level_idx_to_bits[q_idx]
 
     # Unpack ints into k-bit MSB-first arrays.
     powers = (1 << np.arange(k - 1, -1, -1)).astype(np.int64)
     i_bits = ((i_bits_int[:, None] // powers) & 1)
     q_bits = ((q_bits_int[:, None] // powers) & 1)
     out = np.concatenate([i_bits, q_bits], axis=1)
-    return out.ravel().astype(np.int64)
+    return out.ravel().astype(np.int64, copy=False)
 
 
 # ---------------------------------------------------------------------------
