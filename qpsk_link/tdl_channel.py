@@ -106,6 +106,10 @@ TDL_C = TDLProfile(
 
 ALL_NLOS_PROFILES: tuple[TDLProfile, ...] = (TDL_A, TDL_B, TDL_C)
 
+# Registry for O(1) name-based lookup; built from ALL_NLOS_PROFILES so it
+# stays in sync automatically if new profiles are added.
+_PROFILE_REGISTRY: dict[str, TDLProfile] = {p.name: p for p in ALL_NLOS_PROFILES}
+
 
 # ---------------------------------------------------------------------------
 # Sampling a TDL impulse response
@@ -159,8 +163,7 @@ def sample_tdl_realization(
     # Accumulate taps that land in the same discrete bin.
     cir_length = int(delay_idx.max()) + 1
     h = np.zeros(cir_length, dtype=complex)
-    for idx, gain in zip(delay_idx, tap_gains, strict=False):
-        h[idx] += gain
+    np.add.at(h, delay_idx, tap_gains)
     return h
 
 
@@ -192,11 +195,9 @@ def cir_to_frequency_response(h: np.ndarray, n_subcarriers: int) -> np.ndarray:
     per-subcarrier complex channel gain.
     """
     h = np.asarray(h, dtype=complex)
-    if h.size < n_subcarriers:
-        h_padded = np.concatenate([h, np.zeros(n_subcarriers - h.size, dtype=complex)])
-    else:
-        h_padded = h[:n_subcarriers]
-    return np.fft.fft(h_padded, norm="ortho") * np.sqrt(n_subcarriers)
+    # fft's n= argument handles both zero-padding (h shorter) and truncation
+    # (h longer) without an intermediate allocation.
+    return np.fft.fft(h, n=n_subcarriers, norm="ortho") * np.sqrt(n_subcarriers)
 
 
 # ---------------------------------------------------------------------------
@@ -206,11 +207,10 @@ def cir_to_frequency_response(h: np.ndarray, n_subcarriers: int) -> np.ndarray:
 
 def get_profile(name: str) -> TDLProfile:
     """Look up a profile by name (case-insensitive). Raises KeyError otherwise."""
-    name_upper = name.upper().replace("_", "-")
-    if name_upper == "TDL-A":
-        return TDL_A
-    if name_upper == "TDL-B":
-        return TDL_B
-    if name_upper == "TDL-C":
-        return TDL_C
-    raise KeyError(f"Unknown TDL profile: {name}. Use one of TDL-A, TDL-B, TDL-C.")
+    key = name.upper().replace("_", "-")
+    try:
+        return _PROFILE_REGISTRY[key]
+    except KeyError:
+        raise KeyError(
+            f"Unknown TDL profile: {name!r}. Use one of {list(_PROFILE_REGISTRY)}."
+        ) from None

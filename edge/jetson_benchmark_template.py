@@ -75,8 +75,17 @@ def _select_providers() -> list[str]:
     return [p for p in desired if p in available]
 
 
-def _percentile_us(latencies_seconds: list[float], pct: float) -> float:
-    return float(np.percentile(np.asarray(latencies_seconds), pct) * 1e6)
+def _latency_stats_us(latencies_seconds: list[float]) -> dict[str, float]:
+    """Compute p50/p95/p99/mean/std from a list of per-run latencies (seconds)."""
+    arr = np.asarray(latencies_seconds)
+    p50, p95, p99 = np.percentile(arr, [50, 95, 99]) * 1e6
+    return {
+        "p50_us": float(p50),
+        "p95_us": float(p95),
+        "p99_us": float(p99),
+        "mean_us": float(arr.mean() * 1e6),
+        "std_us": float(arr.std() * 1e6),
+    }
 
 
 def benchmark(
@@ -116,6 +125,7 @@ def benchmark(
         latencies.append(time.perf_counter() - t0)
 
     throughput = (runs * batch_size) / sum(latencies)
+    stats = _latency_stats_us(latencies)
 
     return {
         "model_path": str(model_path),
@@ -124,11 +134,7 @@ def benchmark(
         "warmup": warmup,
         "batch_size": batch_size,
         "input_dim": input_dim,
-        "p50_us": _percentile_us(latencies, 50),
-        "p95_us": _percentile_us(latencies, 95),
-        "p99_us": _percentile_us(latencies, 99),
-        "mean_us": float(np.mean(latencies) * 1e6),
-        "std_us": float(np.std(latencies) * 1e6),
+        **stats,
         "throughput_infs_per_sec": float(throughput),
     }
 
