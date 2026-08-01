@@ -318,3 +318,10 @@ The methodology — classical baseline first, ML second, edge path third, honest
 ## License
 
 MIT License.
+
+## Project history
+
+Formerly **`qpsk-wireless-link-simulator`**. Renamed on GitHub; the repository content is unchanged (identical commit history, HEAD 0cf4878).
+
+The pre-rename development history is not in this repository; it is kept
+offline in the superseded working copy (see that repo's README).
