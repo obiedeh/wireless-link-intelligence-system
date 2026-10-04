@@ -6,18 +6,18 @@
   <title>Wireless Link Intelligence System — Evidence Pack</title>
   <style>
     :root {
-      --ink: #172033; --muted: #5d6878; --line: #d9dee7;
-      --panel: #ffffff; --band: #f5f7fa;
-      --green: #136f63; --red: #a33d1f; --blue: #294c7a;
-      --gold: #a66b00; --ink-alt: #2a3b5b;
+      --ink: #1a1c1e; --muted: #5d6459; --line: #d8dbd2;
+      --panel: #ffffff; --band: #f0f1ec;
+      --green: #4d7c0f; --red: #c62828; --blue: #1f6fd1;
+      --gold: #c2560c; --ink-alt: #3d4239;
     }
     * { box-sizing: border-box; }
     body {
-      margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+      margin: 0; font-family: "Helvetica Neue", Helvetica, Arial,
       BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: var(--ink); background: #ffffff;
     }
-    header { padding: 36px 48px 24px; border-bottom: 1px solid var(--line); background: #f8fafc; }
+    header { padding: 36px 48px 24px; border-bottom: 1px solid var(--line); background: #f6f7f3; }
     header h1 { margin: 0 0 8px; font-size: 32px; line-height: 1.08; letter-spacing: -0.01em; }
     header .sub { margin: 0 0 14px; max-width: 1100px; color: var(--muted); font-size: 15px; line-height: 1.55; }
     header .topnav { font-size: 13px; }
@@ -41,10 +41,10 @@
     .decision-card h3 { margin-top: 8px; }
     .decision-card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
     .status-good, .status-warn, .status-risk, .status-neutral { display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: 0.03em; }
-    .status-good { background: #e2f1ec; color: var(--green); }
-    .status-warn { background: #fdf3df; color: var(--gold); }
-    .status-risk { background: #fbe3d8; color: var(--red); }
-    .status-neutral { background: #edf1f6; color: var(--ink-alt); }
+    .status-good { background: #ecf5dc; color: var(--green); }
+    .status-warn { background: #fcecdf; color: var(--gold); }
+    .status-risk { background: #fbe4e1; color: var(--red); }
+    .status-neutral { background: #eceee7; color: var(--ink-alt); }
     .grid { display: grid; grid-template-columns: repeat(2, minmax(280px, 1fr)); gap: 16px; }
     .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 14px; }
     .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 12px; }
@@ -57,11 +57,11 @@
     table.methodology th { width: 38%; color: var(--ink-alt); }
     .reason-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
     .reason-head span { color: var(--blue); font-weight: 700; }
-    .callout { border-left: 5px solid var(--gold); background: #fffaf0; padding: 12px 16px; border-radius: 6px; font-size: 14px; line-height: 1.5; }
+    .callout { border-left: 5px solid var(--gold); background: #fdf5ee; padding: 12px 16px; border-radius: 6px; font-size: 14px; line-height: 1.5; }
     .callout strong { color: var(--gold); }
-    .callout.red { border-left-color: var(--red); background: #fff7f3; }
+    .callout.red { border-left-color: var(--red); background: #fdf1ef; }
     .callout.red strong { color: var(--red); }
-    .readout { margin: 10px 0 14px; padding: 10px 12px; border-left: 4px solid var(--blue); background: #f7fafd; color: var(--ink-alt); font-size: 13px; line-height: 1.45; }
+    .readout { margin: 10px 0 14px; padding: 10px 12px; border-left: 4px solid var(--blue); background: #fbfbf8; color: var(--ink-alt); font-size: 13px; line-height: 1.45; }
     .readout strong { color: var(--blue); }
     .links { font-size: 13px; }
     .links a { display: inline-block; margin: 4px 14px 4px 0; color: var(--blue); font-weight: 600; text-decoration: none; }
@@ -73,8 +73,19 @@
       header, main, footer { padding-left: 20px; padding-right: 20px; }
     }
   </style>
-</head>
-<body>
+<style id="ee-theme">:root{color-scheme:light}h1,h2,h3{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-weight:500;letter-spacing:-.02em}h1{letter-spacing:-.035em}
+body{margin:0}
+.ee-band{background:#181b1d;border-bottom:1px solid #393d3f;color:#eef1e8;font:14px/1.4 "Helvetica Neue",Helvetica,Arial,sans-serif;position:relative;z-index:50}
+.ee-band .ee-in{max-width:1120px;margin:0 auto;padding:10px 20px;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;justify-content:space-between}
+.ee-band a{color:#a3aa9c;text-decoration:none}.ee-band a:hover{color:#eef1e8}
+.ee-band .ee-mark{display:inline-flex;align-items:center;gap:8px;color:#eef1e8;font-weight:600;letter-spacing:-.01em}
+.ee-band .ee-mark i{display:inline-block;width:14px;height:14px;border-radius:2px;background:linear-gradient(135deg,#b7f34a 0 50%,#68b7ff 50% 100%)}
+.ee-band .ee-mark span{color:#a3aa9c;font-weight:400}.ee-band nav{display:flex;gap:16px}
+.ee-foot{border-top:1px solid #393d3f;background:#181b1d;color:#7c8378;font:13px/1.5 "Helvetica Neue",Helvetica,Arial,sans-serif}
+.ee-foot .ee-in{max-width:1120px;margin:0 auto;padding:14px 20px}.ee-foot a{color:#a3aa9c}
+@media print{.ee-band,.ee-foot{background:#fff;color:#5d6459;border-color:#d8dbd2}.ee-band .ee-mark{color:#1a1c1e}}
+</style></head>
+<body><div class="ee-band"><div class="ee-in"><a class="ee-mark" href="https://embodiededge.ai"><i></i>EmbodiedEdge <span>Labs · Evidence</span></a><nav><a href="https://github.com/obiedeh/wireless-link-intelligence-system">Repository</a><a href="https://embodiededge.ai">Lab</a><a href="https://github.com/obiedeh">Obinna Edeh</a></nav></div></div>
   <header>
     <h1>Wireless Link Intelligence System</h1>
     <p class="sub">An AI-for-RAN reference: CP-OFDM with adaptive Gray-coded QAM (M = 4 / 16 / 64 / 256), 3GPP TR 38.901 TDL-A/B/C channel models, a pilot-based channel-estimation comparison (LS / MMSE / neural), an INT8 ONNX deployment pipeline, and a Jetson AGX Thor benchmark template ready to run. Every committed number is regenerable by <span class="sig">make verify</span>.</p>
@@ -326,5 +337,5 @@
   <footer>
     Generated by <span class="sig">python build_dashboard.py</span> from artifacts in <span class="sig">reports/</span>. Deterministic given seed=42 on the synthetic dataset and seed=7 on the BER sweeps. See <span class="sig">.github/workflows/ci.yml</span> for the canonical reproduction recipe.
   </footer>
-</body>
+<div class="ee-foot"><div class="ee-in">An <a href="https://embodiededge.ai">EmbodiedEdge Labs</a> project. Measured on real hardware, published as found.</div></div></body>
 </html>

@@ -20,6 +20,8 @@ import json
 from html import escape
 from pathlib import Path
 
+from ai_link_estimation.ee_theme import apply_theme
+
 _REPO_URL = "https://github.com/obiedeh/wireless-link-intelligence-system"
 
 
@@ -590,18 +592,18 @@ def build_dashboard(
   <title>Wireless Link Intelligence System — Evidence Pack</title>
   <style>
     :root {{
-      --ink: #172033; --muted: #5d6878; --line: #d9dee7;
-      --panel: #ffffff; --band: #f5f7fa;
-      --green: #136f63; --red: #a33d1f; --blue: #294c7a;
-      --gold: #a66b00; --ink-alt: #2a3b5b;
+      --ink: #1a1c1e; --muted: #5d6459; --line: #d8dbd2;
+      --panel: #ffffff; --band: #f0f1ec;
+      --green: #4d7c0f; --red: #c62828; --blue: #1f6fd1;
+      --gold: #c2560c; --ink-alt: #3d4239;
     }}
     * {{ box-sizing: border-box; }}
     body {{
-      margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+      margin: 0; font-family: "Helvetica Neue", Helvetica, Arial,
       BlinkMacSystemFont, "Segoe UI", sans-serif;
       color: var(--ink); background: #ffffff;
     }}
-    header {{ padding: 36px 48px 24px; border-bottom: 1px solid var(--line); background: #f8fafc; }}
+    header {{ padding: 36px 48px 24px; border-bottom: 1px solid var(--line); background: #f6f7f3; }}
     header h1 {{ margin: 0 0 8px; font-size: 32px; line-height: 1.08; letter-spacing: -0.01em; }}
     header .sub {{ margin: 0 0 14px; max-width: 1100px; color: var(--muted); font-size: 15px; line-height: 1.55; }}
     header .topnav {{ font-size: 13px; }}
@@ -625,10 +627,10 @@ def build_dashboard(
     .decision-card h3 {{ margin-top: 8px; }}
     .decision-card p {{ margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }}
     .status-good, .status-warn, .status-risk, .status-neutral {{ display: inline-block; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 750; text-transform: uppercase; letter-spacing: 0.03em; }}
-    .status-good {{ background: #e2f1ec; color: var(--green); }}
-    .status-warn {{ background: #fdf3df; color: var(--gold); }}
-    .status-risk {{ background: #fbe3d8; color: var(--red); }}
-    .status-neutral {{ background: #edf1f6; color: var(--ink-alt); }}
+    .status-good {{ background: #ecf5dc; color: var(--green); }}
+    .status-warn {{ background: #fcecdf; color: var(--gold); }}
+    .status-risk {{ background: #fbe4e1; color: var(--red); }}
+    .status-neutral {{ background: #eceee7; color: var(--ink-alt); }}
     .grid {{ display: grid; grid-template-columns: repeat(2, minmax(280px, 1fr)); gap: 16px; }}
     .grid-3 {{ display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 14px; }}
     .grid-4 {{ display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 12px; }}
@@ -641,11 +643,11 @@ def build_dashboard(
     table.methodology th {{ width: 38%; color: var(--ink-alt); }}
     .reason-head {{ display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }}
     .reason-head span {{ color: var(--blue); font-weight: 700; }}
-    .callout {{ border-left: 5px solid var(--gold); background: #fffaf0; padding: 12px 16px; border-radius: 6px; font-size: 14px; line-height: 1.5; }}
+    .callout {{ border-left: 5px solid var(--gold); background: #fdf5ee; padding: 12px 16px; border-radius: 6px; font-size: 14px; line-height: 1.5; }}
     .callout strong {{ color: var(--gold); }}
-    .callout.red {{ border-left-color: var(--red); background: #fff7f3; }}
+    .callout.red {{ border-left-color: var(--red); background: #fdf1ef; }}
     .callout.red strong {{ color: var(--red); }}
-    .readout {{ margin: 10px 0 14px; padding: 10px 12px; border-left: 4px solid var(--blue); background: #f7fafd; color: var(--ink-alt); font-size: 13px; line-height: 1.45; }}
+    .readout {{ margin: 10px 0 14px; padding: 10px 12px; border-left: 4px solid var(--blue); background: #fbfbf8; color: var(--ink-alt); font-size: 13px; line-height: 1.45; }}
     .readout strong {{ color: var(--blue); }}
     .links {{ font-size: 13px; }}
     .links a {{ display: inline-block; margin: 4px 14px 4px 0; color: var(--blue); font-weight: 600; text-decoration: none; }}
@@ -799,7 +801,7 @@ def build_dashboard(
 """
     output_path = output_dir / "dashboard.html"
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(html, encoding="utf-8")
+    output_path.write_text(apply_theme(html, repo_url="https://github.com/obiedeh/wireless-link-intelligence-system", dark={}, root_selectors=":root", force_dark=False, scheme="light"), encoding="utf-8")
     return output_path
 
 
