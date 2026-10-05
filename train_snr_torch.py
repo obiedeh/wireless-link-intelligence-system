@@ -60,8 +60,27 @@ def _maybe_load_sklearn_baseline(
     y_pred = sk.predict(X_test_unscaled)
     return {
         "mae_db": float(mean_absolute_error(y_test, y_pred)),
-        "model_path": str(sklearn_path),
+        "model_path": sklearn_path.as_posix(),
     }
+
+
+def _interpretation(fp32: dict[str, float], int8: dict[str, float]) -> str:
+    """Describe the INT8 trade-off from the numbers measured in this run."""
+    size_ratio = fp32["file_size_bytes"] / int8["file_size_bytes"]
+    speed_ratio = fp32["latency_us_per_sample"] / int8["latency_us_per_sample"]
+    drift = int8["mae_db"] - fp32["mae_db"]
+    if 0.95 <= speed_ratio <= 1.05:
+        speed = "about the same speed"
+    elif speed_ratio > 1:
+        speed = f"{speed_ratio:.2f}x faster"
+    else:
+        speed = f"{1 / speed_ratio:.2f}x slower"
+    return (
+        f"Measured in this run on CPU: INT8 is {size_ratio:.2f}x smaller and "
+        f"{speed} per sample compared with FP32 ONNX, with an MAE change of "
+        f"{drift:+.4f} dB on the holdout. Jetson latency is not measured yet "
+        "(recipe in JETSON_BENCHMARK_GUIDE.md)."
+    )
 
 
 def main() -> None:
@@ -130,12 +149,7 @@ def main() -> None:
         },
         "onnx_fp32": fp32_metrics,
         "onnx_int8": int8_metrics,
-        "interpretation": (
-            "Dynamic INT8 quantisation typically incurs <0.05 dB MAE drift on a "
-            "small MLP regression task. The expected payoff is ~3-4× smaller "
-            "model file and ~1.5-3× faster inference on CPU. Latency on Jetson "
-            "AGX Thor is reported separately in reports/jetson_inference_benchmark.json."
-        ),
+        "interpretation": _interpretation(fp32_metrics, int8_metrics),
     }
 
     args.metrics_output.parent.mkdir(parents=True, exist_ok=True)

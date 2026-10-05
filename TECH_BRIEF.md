@@ -10,7 +10,7 @@ Physical-layer AI sits between two failure modes. Skip the signal-processing wor
 
 This repo demonstrates the engineering pattern that avoids both: **classical baseline first** (verified BER curves matching textbook predictions), **ML estimators second** (with honest holdout metrics and disclosed weaknesses), **edge deployment path third** (ONNX export + Jetson benchmark template, ready when hardware lands).
 
-In one sentence: a classical QPSK baseband simulator with deterministic BER vs SNR sweeps, four scikit-learn link estimators trained on a stratified holdout, and an ONNX export path validated end-to-end on commodity hardware — every committed number regenerable by `make verify`.
+In one sentence: a classical QPSK baseband simulator with deterministic BER vs SNR sweeps, four scikit-learn link estimators evaluated on a held-out split, and an ONNX export path validated end-to-end on commodity hardware — every committed number regenerable by `make verify`.
 
 It is **not** a production telecom receiver, not a full AI-RAN base station, not a standards-compliant modem. It is a measurable testbed where the engineering pattern is the deliverable.
 
@@ -23,13 +23,13 @@ It is **not** a production telecom receiver, not a full AI-RAN base station, not
 | **CP-OFDM with adaptive QAM** | M = 4 / 16 / 64 / 256 — BER vs SNR curves on AWGN | [`reports/ber_full_ofdm_awgn.csv`](reports/ber_full_ofdm_awgn.csv) |
 | **3GPP TR 38.901 channels** | TDL-A / TDL-B / TDL-C NLOS — ensemble BLER on 80 realisations × 4 096 bits | [`reports/bler_full_tdl_ofdm.csv`](reports/bler_full_tdl_ofdm.csv) |
 | **Channel estimation comparison** | LS / MMSE / Neural (PyTorch MLP) on TDL-C — neural wins at low SNR | [`reports/channel_estimation_comparison.csv`](reports/channel_estimation_comparison.csv) |
-| **INT8 quantization pipeline** | PyTorch → FP32 ONNX → INT8 ONNX · ~3.3× CPU latency drop · <0.01 dB drift | [`reports/snr_quantization_comparison.json`](reports/snr_quantization_comparison.json) |
+| **INT8 quantization pipeline** | PyTorch → FP32 ONNX → INT8 ONNX · 1.92× smaller · +0.003 dB drift · no consistent CPU speedup at this size | [`reports/snr_quantization_comparison.json`](reports/snr_quantization_comparison.json) |
 | **Jetson AGX Thor latency p50/p95/p99** | benchmark hardware-ready | [`JETSON_BENCHMARK_GUIDE.md`](JETSON_BENCHMARK_GUIDE.md) |
 | AWGN BER full sweep (1M bits, single-carrier) | 2.42e-3 @ 0 dB → 1.83e-4 @ 2 dB → below 1e-6 sim floor at 6+ dB | [`reports/ber_full_awgn.csv`](reports/ber_full_awgn.csv) |
 | Ensemble-averaged Rayleigh BER (200 × 10k bits) | 4.18e-2 @ 0 dB → 5.2e-4 @ 20 dB *(diversity-1 visible)* | [`reports/ber_full_rayleigh.csv`](reports/ber_full_rayleigh.csv) |
-| SNR estimator MAE / R² (12 synthetic features) | 0.118 dB / **0.999** | [`reports/link_estimation_metrics.json`](reports/link_estimation_metrics.json) |
-| Channel classifier — accuracy | **0.472** *(honest weak result — disclosed, not hidden)* | same |
-| Holdout sample size | 125 / 500 (25 % stratified) | same |
+| SNR estimator MAE / R² (12 synthetic features) | 2.36 dB / **0.687** (AWGN 1.33, Rayleigh 3.30 dB) | [`reports/link_estimation_metrics.json`](reports/link_estimation_metrics.json) |
+| Channel classifier — accuracy | **0.552** vs 0.520 majority-class rate *(honest weak result, disclosed, not hidden)* | same |
+| Holdout sample size | 125 / 500 (25 % random split) | same |
 | Tests | **77 / 77** green | [`tests/`](tests/) + `pytest -q` |
 | CI matrix | Python 3.11 + 3.12, Ubuntu | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
 | End-to-end reproducible | `make verify` regenerates every artifact under `reports/` | [`Makefile`](Makefile) |
@@ -52,14 +52,14 @@ The full dashboard with embedded BER curves, methodology box, per-estimator insi
 
 ## The ML estimators
 
-Four scikit-learn estimators learn from 12 constellation statistics (power, I/Q moments, EVM, phase spread, radius spread, quadrant balance). All four are trained as a single sklearn `Pipeline` per target on a 25% stratified holdout.
+Four scikit-learn estimators learn from 12 constellation statistics (power, I/Q moments, EVM, phase spread, radius spread, quadrant balance). All four are trained as a single sklearn `Pipeline` per target and scored on a 25% random holdout. Regenerated 2026-10-04 after the 2026-05-18 channel fix; earlier figures (SNR R² 0.999) came from a channel model that normalized fading away.
 
 | Estimator | Holdout result | Calibrated interpretation |
 |---|---|---|
-| **SNR estimator** | R² 0.999, MAE 0.118 dB | Constellation power and spread tell you SNR directly. Production-relevant: this is the estimator a real receiver would run every frame to drive AGC and MCS decisions. |
-| **BER predictor** | R² 0.968, MAE 4.5e-4 | BER follows from SNR via the Q-function in theory; at low SNR the constellation spread carries extra information the formula misses. The model captures both — residual is well below the simulation floor. |
-| **Channel classifier** | accuracy 0.472 | Honest weak result. AWGN and Rayleigh produce similar statistics when averaged over symbols. Distinguishing them needs higher-order features (envelope variance over time, autocorrelation) the current 12-feature set does not have. **Surfaced, not hidden.** |
-| **Link-quality scorer** | R² 0.904, MAE 4.09 | The 0–100 link-quality target combines SNR and BER with a small Rayleigh penalty. The model recovers it well because SNR and BER are already strongly predicted — this estimator is more a consistency check than a new capability. |
+| **SNR estimator** | R² 0.687, MAE 2.36 dB (AWGN 1.33, Rayleigh 3.30) | On AWGN links, constellation power and spread track SNR closely. Rayleigh fading scales the constellation, and symbol-averaged statistics cannot fully separate a deep fade from low SNR. Production-relevant: this is the estimator a real receiver would run every frame to drive AGC and MCS decisions. |
+| **BER predictor** | R² 0.916, MAE 3.6e-3 | BER follows from SNR via the Q-function in theory. The model tracks the trend, but its error sits above the simulation's measurement resolution, so it is a rough estimate, not a substitute for the measured BER. |
+| **Channel classifier** | accuracy 0.552 (majority-class rate 0.520) | Honest weak result. AWGN and Rayleigh produce similar statistics when averaged over symbols. Distinguishing them needs higher-order features (envelope variance over time, autocorrelation) the current 12-feature set does not have. **Surfaced, not hidden.** |
+| **Link-quality scorer** | R² 0.768, MAE 5.83 | The 0–100 link-quality target combines SNR and BER with a small Rayleigh penalty. The model inherits the SNR estimator's limits on faded links, so it is more a consistency check than a new capability. |
 
 A **non-negotiable project rule** enforces no feature leakage: `fading_abs` and `fading_phase` are saved in the dataset as labels but explicitly excluded from `FEATURE_COLUMNS`. They encode oracle channel knowledge and would trivially inflate any classifier built on them.
 
@@ -93,7 +93,7 @@ Repo-quality signals:
 - **Deterministic seeds threaded through every stochastic step** — BER sweeps use `--seed 7`, dataset generation uses `seed=7`, model training uses `random_state=42`. The Rayleigh smoke caveat (single-realization with seed=7 producing 4.8% BER at 0 dB and zeros above) is explicitly disclosed; the ensemble curve is the right comparison.
 - **No feature leakage**, enforced as a non-negotiable project rule, with `fading_abs`/`fading_phase` excluded from `FEATURE_COLUMNS`.
 - **Two-pass channel verification** — a transmit-power-vs-received-power bug was caught by ensemble measurement, fixed (`add_awgn` gained `reference_power`), and the AWGN regression gate (`ber_smoke_awgn.csv` must regenerate bit-identically) ensures the fix doesn't drift.
-- **Honest weak results surfaced** — the channel classifier's 0.472 accuracy is in the README, the dashboard, and the metrics JSON. Aggregate F1 doesn't hide it.
+- **Honest weak results surfaced** — the channel classifier's 0.552 accuracy is in the README, the dashboard, and the metrics JSON. Aggregate F1 doesn't hide it.
 - **CI matrix on two Python versions, not one** — pip cache keyed on dep hashes, so the matrix is genuinely cross-validated, not a single point.
 - **Modular package layout** — `qpsk_link/` (DSP) and `ai_link_estimation/` (ML) are separate, installable packages; the bare-import sys.path hack from earlier revisions is gone.
 

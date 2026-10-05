@@ -102,7 +102,7 @@ body{margin:0}
       <h2>Headline evidence</h2>
       <p class="lede">Five KPIs at a glance — model quality, test coverage, and the honest disclosure that the channel classifier is weak on this feature set. Jetson latency is <strong>not yet measured</strong>; the benchmark template is ready when hardware lands.</p>
       <div class="metrics">
-        <article class="metric-card "><span>Adaptive QAM</span><strong>4 / 16 / 64 / 256</strong><small>CP-OFDM, Gray-coded square QAM, BER vs SNR matches textbook</small></article><article class="metric-card "><span>3GPP TR 38.901 channels</span><strong>TDL-A / B / C</strong><small>Ensemble BLER on N=80 realisations × 4096 bits per point</small></article><article class="metric-card money"><span>Neural channel estimator</span><strong>Wins at low SNR</strong><small>DeepRx-pattern MLP on TDL-C · LS / MMSE / Neural compared</small></article><article class="metric-card "><span>INT8 quantization</span><strong>~3.3× speedup</strong><small>Dynamic PTQ on ONNX · &lt;0.01 dB drift · smaller file</small></article><article class="metric-card warn"><span>Jetson AGX Thor</span><strong>Hardware-ready</strong><small>ONNX + template ready · pending run</small></article>
+        <article class="metric-card "><span>Adaptive QAM</span><strong>4 / 16 / 64 / 256</strong><small>CP-OFDM, Gray-coded square QAM, BER vs SNR matches textbook</small></article><article class="metric-card "><span>3GPP TR 38.901 channels</span><strong>TDL-A / B / C</strong><small>Ensemble BLER on N=80 realisations × 4096 bits per point</small></article><article class="metric-card money"><span>Neural channel estimator</span><strong>Wins at low SNR</strong><small>DeepRx-pattern MLP on TDL-C · LS / MMSE / Neural compared</small></article><article class="metric-card "><span>INT8 quantization</span><strong>~1.0× speedup</strong><small>Dynamic PTQ on ONNX · &lt;0.01 dB drift · smaller file</small></article><article class="metric-card warn"><span>Jetson AGX Thor</span><strong>Hardware-ready</strong><small>ONNX + template ready · pending run</small></article>
       </div>
     </section>
 
@@ -113,8 +113,8 @@ body{margin:0}
         <article class="decision-card"><span class="status-good">Good</span><h3>Link adaptation result</h3><p>Higher-order QAM increases bits per symbol but pushes the BER floor to higher SNR; QPSK clears the 1e-6 simulation floor far earlier than 64/256-QAM.</p></article>
 <article class="decision-card"><span class="status-risk">Risk</span><h3>Multipath stress result</h3><p>TDL BLER remains 11.2%-20.0% at 30 dB; the diversity-1 perfect-CSI receiver still needs coding/HARQ/MIMO to become a production link.</p></article>
 <article class="decision-card"><span class="status-good">Good</span><h3>Estimator result</h3><p>Neural denoises best at low SNR, MMSE wins once priors dominate at high SNR, and LS is the transparent baseline.</p></article>
-<article class="decision-card"><span class="status-good">Good</span><h3>Edge deployment result</h3><p>ONNX INT8 gives about 3.3x CPU latency speedup with sub-0.01 dB MAE drift against FP32 ONNX.</p></article>
-<article class="decision-card"><span class="status-risk">Risk</span><h3>Weak result</h3><p>Channel classifier accuracy is 0.472; current constellation statistics estimate SNR/BER well but do not separate AWGN vs Rayleigh reliably.</p></article>
+<article class="decision-card"><span class="status-good">Good</span><h3>Edge deployment result</h3><p>ONNX INT8 is 1.9x smaller than FP32 ONNX with +0.003 dB MAE drift; CPU latency ratio this run 1.0x, too small a model for a consistent speedup.</p></article>
+<article class="decision-card"><span class="status-risk">Risk</span><h3>Weak result</h3><p>Channel classifier accuracy is 0.552; current constellation statistics do not separate AWGN vs Rayleigh reliably.</p></article>
 <article class="decision-card"><span class="status-warn">Pending</span><h3>Hardware validation status</h3><p>Jetson template is ready; no hardware latency is claimed until benchmark JSON exists.</p></article>
       </div>
     </section>
@@ -149,7 +149,7 @@ body{margin:0}
 <tr><th>Single-carrier baseline</th><td>QPSK over AWGN (1M bits) + flat Rayleigh ensemble (N=200 × 10k bits)</td></tr>
 <tr><th>Channel convention</th><td>Transmit-power-SNR — verified (|h|² fade penalty does not cancel out)</td></tr>
 <tr><th>Channel estimation</th><td>Pilot-based — LS / MMSE (exponential PDP prior) / Neural (PyTorch MLP) compared head-to-head on TDL-C</td></tr>
-<tr><th>Link-estimation ML dataset</th><td>Synthetic 12-feature CSV — 500 samples, 125 stratified holdout (no oracle leakage; enforced as a hard project rule)</td></tr>
+<tr><th>Link-estimation ML dataset</th><td>Synthetic 12-feature CSV — 500 samples, 125 random holdout (no oracle leakage; enforced as a hard project rule)</td></tr>
 <tr><th>Edge deployment</th><td>PyTorch → FP32 ONNX → INT8 ONNX (dynamic PTQ via onnxruntime.quantization)</td></tr>
 <tr><th>Validation harness</th><td>77 pytest tests, ruff lint, CI matrix on Python 3.11 + 3.12</td></tr>
         </tbody></table>
@@ -214,18 +214,18 @@ body{margin:0}
     
     <section>
       <h2>FP32 → INT8 ONNX quantization (SNR estimator)</h2>
-      <p class="lede">Same model, three deployment forms: PyTorch FP32 (training native), ONNX FP32 (portable), ONNX INT8 (dynamic post-training quantization via ONNX Runtime). The honest trade-off: ~3.3× CPU latency reduction and ~1.9× smaller file with sub-0.01 dB accuracy drift. This is the standard edge-AI pipeline that lands on Jetson, BlueField, or any TensorRT-backed inference target.</p>
+      <p class="lede">Same model, three deployment forms: PyTorch FP32 (training native), ONNX FP32 (portable), ONNX INT8 (dynamic post-training quantization via ONNX Runtime). The honest trade-off: 1.9× smaller file with sub-0.01 dB accuracy drift; CPU latency ratio this run 1.0×, since a model this small gains little from INT8 on CPU. This is the standard edge-AI pipeline that lands on Jetson, BlueField, or any TensorRT-backed inference target.</p>
       <div class="panel">
         <table>
           <thead><tr><th>Form</th><th>Holdout MAE (dB)</th><th>File size</th><th>CPU latency (µs / sample)</th></tr></thead>
           <tbody>
-            <tr><td><strong>sklearn baseline</strong></td><td>0.0746 dB</td><td>—</td><td>—</td></tr>
-            <tr><td><strong>PyTorch FP32</strong></td><td>0.2869 dB</td><td>—</td><td>(in-memory)</td></tr>
-            <tr><td><strong>ONNX FP32</strong></td><td>0.2869 dB</td><td>12,445 B</td><td>46.11</td></tr>
-            <tr><td><strong>ONNX INT8 (dyn PTQ)</strong></td><td>0.2798 dB</td><td>6,487 B</td><td>13.77</td></tr>
+            <tr><td><strong>sklearn baseline</strong></td><td>1.2932 dB</td><td>—</td><td>—</td></tr>
+            <tr><td><strong>PyTorch FP32</strong></td><td>2.3267 dB</td><td>—</td><td>(in-memory)</td></tr>
+            <tr><td><strong>ONNX FP32</strong></td><td>2.3267 dB</td><td>12,445 B</td><td>9.77</td></tr>
+            <tr><td><strong>ONNX INT8 (dyn PTQ)</strong></td><td>2.3300 dB</td><td>6,487 B</td><td>9.50</td></tr>
           </tbody>
         </table>
-        <p class="lede" style="margin-top:8px;">Dynamic INT8 quantisation typically incurs &lt;0.05 dB MAE drift on a small MLP regression task. The expected payoff is ~3-4× smaller model file and ~1.5-3× faster inference on CPU. Latency on Jetson AGX Thor is reported separately in reports/jetson_inference_benchmark.json.</p>
+        <p class="lede" style="margin-top:8px;">Measured in this run on CPU: INT8 is 1.92x smaller and about the same speed per sample compared with FP32 ONNX, with an MAE change of +0.0034 dB on the holdout. Jetson latency is not measured yet (recipe in JETSON_BENCHMARK_GUIDE.md).</p>
       </div>
     </section>
     
@@ -278,13 +278,13 @@ body{margin:0}
 
     <section>
       <h2>ML link estimators — holdout performance</h2>
-      <p class="lede">Four estimators trained on the synthetic link-condition CSV with a 25% stratified holdout. The channel classifier's weak accuracy is reported, not hidden — see the per-estimator interpretation below.</p>
+      <p class="lede">Four estimators trained on the synthetic link-condition CSV with a 25% random holdout. The channel classifier's weak accuracy is reported, not hidden — see the per-estimator interpretation below.</p>
       <div class="panel">
         <table><thead><tr><th>Estimator</th><th>Primary metric</th><th>Secondary</th></tr></thead>
-          <tbody><tr><td><strong>SNR estimator</strong></td><td>R² 0.999</td><td>MAE 0.1181</td></tr>
-<tr><td><strong>BER predictor</strong></td><td>R² 0.968</td><td>MAE 0.0005</td></tr>
-<tr><td><strong>Channel classifier</strong></td><td>acc 0.472</td><td>(below majority-class baseline)</td></tr>
-<tr><td><strong>Link-quality scorer</strong></td><td>R² 0.904</td><td>MAE 4.0886</td></tr></tbody>
+          <tbody><tr><td><strong>SNR estimator</strong></td><td>R² 0.687</td><td>MAE 2.3556</td></tr>
+<tr><td><strong>BER predictor</strong></td><td>R² 0.916</td><td>MAE 0.0036</td></tr>
+<tr><td><strong>Channel classifier</strong></td><td>acc 0.552</td><td>(majority-class rate 0.520)</td></tr>
+<tr><td><strong>Link-quality scorer</strong></td><td>R² 0.768</td><td>MAE 5.8324</td></tr></tbody>
         </table>
       </div>
     </section>
@@ -293,10 +293,10 @@ body{margin:0}
       <h2>What each estimator is doing — and where it fails</h2>
       <p class="lede">Per-estimator interpretation in plain English. Each card includes the calibrated finding (what this model captures, why, and where the boundary is).</p>
       <div class="grid">
-        <article class="reason-card"><div class="reason-head"><strong>SNR estimator</strong><span>R² 0.999</span></div><p>The constellation power and spread tell you SNR directly — clean features (rx_power_mean, evm_rms, radius_std) make this nearly deterministic on synthetic data. On a real receiver this is the estimator that runs every frame to drive AGC and modulation-and-coding-scheme decisions.</p></article>
-<article class="reason-card"><div class="reason-head"><strong>BER predictor</strong><span>R² 0.968</span></div><p>BER follows from SNR via the Q-function in theory, but at low SNR the constellation spread carries information the textbook formula misses. Predicting measured BER directly from constellation statistics catches both — the residual error is well below the simulation resolution floor on this dataset.</p></article>
-<article class="reason-card"><div class="reason-head"><strong>Channel classifier</strong><span>acc 0.472</span></div><p>Honest weak result. AWGN and Rayleigh produce similar constellation statistics when averaged over symbols — distinguishing them needs higher-order features (envelope variance over time, autocorrelation) the current 12-feature set does not have. Accuracy below the 0.5 majority-class baseline is the calibrated signal that this task wants a different feature design; surfaced rather than hidden.</p></article>
-<article class="reason-card"><div class="reason-head"><strong>Link-quality scorer</strong><span>R² 0.904</span></div><p>The 0–100 link-quality target combines SNR and BER with a small Rayleigh penalty. The model recovers it well because SNR and BER are already strongly predicted — this estimator is more a consistency check than a new capability.</p></article>
+        <article class="reason-card"><div class="reason-head"><strong>SNR estimator</strong><span>R² 0.687</span></div><p>On AWGN links, constellation power and spread track SNR closely. Rayleigh fading scales the constellation, and symbol-averaged statistics cannot fully separate a deep fade from low SNR, so error on faded links is much larger. An earlier channel model normalized fading away and made this look nearly perfect (R² 0.999); the corrected model is the honest number.</p></article>
+<article class="reason-card"><div class="reason-head"><strong>BER predictor</strong><span>R² 0.916</span></div><p>BER follows from SNR via the Q-function in theory, but at low SNR the constellation spread carries information the textbook formula misses. Predicting measured BER from constellation statistics tracks the trend, but its error sits above the simulation&#x27;s measurement resolution, so it is a rough estimate, not a substitute for the measured BER.</p></article>
+<article class="reason-card"><div class="reason-head"><strong>Channel classifier</strong><span>acc 0.552</span></div><p>Honest weak result. AWGN and Rayleigh produce similar constellation statistics when averaged over symbols — distinguishing them needs higher-order features (envelope variance over time, autocorrelation) the current 12-feature set does not have. Accuracy close to the majority-class rate is the calibrated signal that this task wants a different feature design; surfaced rather than hidden.</p></article>
+<article class="reason-card"><div class="reason-head"><strong>Link-quality scorer</strong><span>R² 0.768</span></div><p>The 0–100 link-quality target combines SNR and BER with a small Rayleigh penalty. The model inherits the SNR estimator&#x27;s limits on faded links, so it is more a consistency check than a new capability.</p></article>
       </div>
     </section>
 
@@ -314,7 +314,7 @@ body{margin:0}
     <section>
       <h2>Limitations</h2>
       <div class="callout red">
-        <strong>What this is not:</strong> a production telecom receiver, an AI-RAN base station, a standards-compliant modem, or a scheduler. The ML dataset is synthetic. The Jetson row is <span class="sig">&lt;TO MEASURE&gt;</span> until hardware lands. The channel classifier's 0.472 accuracy is below the majority-class baseline — disclosed as a calibrated weak result, not hidden behind aggregate F1 numbers.
+        <strong>What this is not:</strong> a production telecom receiver, an AI-RAN base station, a standards-compliant modem, or a scheduler. The ML dataset is synthetic. The Jetson row is <span class="sig">&lt;TO MEASURE&gt;</span> until hardware lands. The channel classifier's accuracy is close to the majority-class rate, disclosed as a calibrated weak result, not hidden behind aggregate numbers.
       </div>
     </section>
 

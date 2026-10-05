@@ -34,6 +34,6 @@ Generated training data and model binaries are intentionally not committed. They
 
 This is not a production modem, AI-RAN base station, scheduler, or standards-compliant receiver. It is a measurable simulation testbed and edge-inference preparation repo.
 
-Jetson evidence remains limited to the ONNX benchmark template until real device latency artifacts are committed. The classifier accuracy result (0.472) is the calibrated finding that the current 12-feature set supports SNR / BER regression much more strongly than channel-type discrimination — surfaced, not hidden.
+Jetson evidence remains limited to the ONNX benchmark template until real device latency artifacts are committed. The classifier accuracy result (0.552 against a 0.520 majority-class rate) is the calibrated finding that the current 12-feature set carries little channel-type signal — surfaced, not hidden.
 
 See [TECH_BRIEF.md](TECH_BRIEF.md) for the one-page hiring-manager summary.

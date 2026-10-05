@@ -67,31 +67,31 @@ def _decision_card(title: str, status: str, body: str, status_class: str) -> str
 
 _INSIGHT_COPY = {
     "snr_estimator": (
-        "The constellation power and spread tell you SNR directly — clean features "
-        "(rx_power_mean, evm_rms, radius_std) make this nearly deterministic on "
-        "synthetic data. On a real receiver this is the estimator that runs every "
-        "frame to drive AGC and modulation-and-coding-scheme decisions."
+        "On AWGN links, constellation power and spread track SNR closely. Rayleigh "
+        "fading scales the constellation, and symbol-averaged statistics cannot fully "
+        "separate a deep fade from low SNR, so error on faded links is much larger. "
+        "An earlier channel model normalized fading away and made this look nearly "
+        "perfect (R\u00b2 0.999); the corrected model is the honest number."
     ),
     "ber_predictor": (
         "BER follows from SNR via the Q-function in theory, but at low SNR the "
         "constellation spread carries information the textbook formula misses. "
-        "Predicting measured BER directly from constellation statistics catches "
-        "both — the residual error is well below the simulation resolution floor "
-        "on this dataset."
+        "Predicting measured BER from constellation statistics tracks the trend, "
+        "but its error sits above the simulation's measurement resolution, so it "
+        "is a rough estimate, not a substitute for the measured BER."
     ),
     "channel_classifier": (
         "Honest weak result. AWGN and Rayleigh produce similar constellation "
         "statistics when averaged over symbols — distinguishing them needs "
         "higher-order features (envelope variance over time, autocorrelation) the "
-        "current 12-feature set does not have. Accuracy below the 0.5 "
-        "majority-class baseline is the calibrated signal that this task wants a "
+        "current 12-feature set does not have. Accuracy close to the "
+        "majority-class rate is the calibrated signal that this task wants a "
         "different feature design; surfaced rather than hidden."
     ),
     "link_quality_scorer": (
         "The 0–100 link-quality target combines SNR and BER with a small Rayleigh "
-        "penalty. The model recovers it well because SNR and BER are already "
-        "strongly predicted — this estimator is more a consistency check than a "
-        "new capability."
+        "penalty. The model inherits the SNR estimator's limits on faded links, "
+        "so it is more a consistency check than a new capability."
     ),
 }
 
@@ -332,7 +332,7 @@ def _int8_quantization_section_html(reports_dir: Path) -> str:
     return f"""
     <section>
       <h2>FP32 → INT8 ONNX quantization (SNR estimator)</h2>
-      <p class="lede">Same model, three deployment forms: PyTorch FP32 (training native), ONNX FP32 (portable), ONNX INT8 (dynamic post-training quantization via ONNX Runtime). The honest trade-off: ~{speedup:.1f}× CPU latency reduction and ~{size_ratio:.1f}× smaller file with sub-0.01 dB accuracy drift. This is the standard edge-AI pipeline that lands on Jetson, BlueField, or any TensorRT-backed inference target.</p>
+      <p class="lede">Same model, three deployment forms: PyTorch FP32 (training native), ONNX FP32 (portable), ONNX INT8 (dynamic post-training quantization via ONNX Runtime). The honest trade-off: {size_ratio:.1f}× smaller file with sub-0.01 dB accuracy drift; CPU latency ratio this run {speedup:.1f}×, since a model this small gains little from INT8 on CPU. This is the standard edge-AI pipeline that lands on Jetson, BlueField, or any TensorRT-backed inference target.</p>
       <div class="panel">
         <table>
           <thead><tr><th>Form</th><th>Holdout MAE (dB)</th><th>File size</th><th>CPU latency (µs / sample)</th></tr></thead>
@@ -429,6 +429,12 @@ def build_dashboard(
     quant_data = _read_metrics(output_dir / "snr_quantization_comparison.json")
     int8_metrics = quant_data.get("onnx_int8", {})
     fp32_metrics = quant_data.get("onnx_fp32", {})
+    int8_size_ratio = (
+        fp32_metrics.get("file_size_bytes", 0) / int8_metrics.get("file_size_bytes", 1)
+        if int8_metrics.get("file_size_bytes")
+        else 0.0
+    )
+    int8_drift = int8_metrics.get("mae_db", 0.0) - fp32_metrics.get("mae_db", 0.0)
     int8_speedup = (
         fp32_metrics.get("latency_us_per_sample", 0) / int8_metrics.get("latency_us_per_sample", 1)
         if int8_metrics.get("latency_us_per_sample")
@@ -470,13 +476,14 @@ def build_dashboard(
             _decision_card(
                 "Edge deployment result",
                 "Good",
-                f"ONNX INT8 gives about {int8_speedup:.1f}x CPU latency speedup with sub-0.01 dB MAE drift against FP32 ONNX.",
+                f"ONNX INT8 is {int8_size_ratio:.1f}x smaller than FP32 ONNX with {int8_drift:+.3f} dB MAE drift; "
+                f"CPU latency ratio this run {int8_speedup:.1f}x, too small a model for a consistent speedup.",
                 "status-good",
             ),
             _decision_card(
                 "Weak result",
                 "Risk",
-                f"Channel classifier accuracy is {classifier.get('accuracy', 0.0):.3f}; current constellation statistics estimate SNR/BER well but do not separate AWGN vs Rayleigh reliably.",
+                f"Channel classifier accuracy is {classifier.get('accuracy', 0.0):.3f}; current constellation statistics do not separate AWGN vs Rayleigh reliably.",
                 "status-risk",
             ),
             _decision_card(
@@ -526,7 +533,7 @@ def build_dashboard(
         ("Single-carrier baseline", "QPSK over AWGN (1M bits) + flat Rayleigh ensemble (N=200 × 10k bits)"),
         ("Channel convention", "Transmit-power-SNR — verified (|h|² fade penalty does not cancel out)"),
         ("Channel estimation", "Pilot-based — LS / MMSE (exponential PDP prior) / Neural (PyTorch MLP) compared head-to-head on TDL-C"),
-        ("Link-estimation ML dataset", f"Synthetic 12-feature CSV — {samples:,} samples, {test_samples:,} stratified holdout (no oracle leakage; enforced as a hard project rule)"),
+        ("Link-estimation ML dataset", f"Synthetic 12-feature CSV — {samples:,} samples, {test_samples:,} random holdout (no oracle leakage; enforced as a hard project rule)"),
         ("Edge deployment", "PyTorch → FP32 ONNX → INT8 ONNX (dynamic PTQ via onnxruntime.quantization)"),
         ("Validation harness", "77 pytest tests, ruff lint, CI matrix on Python 3.11 + 3.12"),
     ]
@@ -548,7 +555,9 @@ def build_dashboard(
             secondary = f"MAE {m.get('mae', 0.0):.4f}"
         else:
             primary = f"acc {m.get('accuracy', 0.0):.3f}"
-            secondary = "(below majority-class baseline)"
+            rate = m.get("majority_class_rate")
+            secondary = (f"(majority-class rate {rate:.3f})" if rate is not None
+                         else "(near majority-class rate)")
         estimator_rows.append(
             f"<tr><td><strong>{escape(label)}</strong></td>"
             f"<td>{escape(primary)}</td>"
@@ -746,7 +755,7 @@ def build_dashboard(
 
     <section>
       <h2>ML link estimators — holdout performance</h2>
-      <p class="lede">Four estimators trained on the synthetic link-condition CSV with a 25% stratified holdout. The channel classifier's weak accuracy is reported, not hidden — see the per-estimator interpretation below.</p>
+      <p class="lede">Four estimators trained on the synthetic link-condition CSV with a 25% random holdout. The channel classifier's weak accuracy is reported, not hidden — see the per-estimator interpretation below.</p>
       <div class="panel">
         <table><thead><tr><th>Estimator</th><th>Primary metric</th><th>Secondary</th></tr></thead>
           <tbody>{estimator_table}</tbody>
@@ -776,7 +785,7 @@ def build_dashboard(
     <section>
       <h2>Limitations</h2>
       <div class="callout red">
-        <strong>What this is not:</strong> a production telecom receiver, an AI-RAN base station, a standards-compliant modem, or a scheduler. The ML dataset is synthetic. The Jetson row is <span class="sig">&lt;TO MEASURE&gt;</span> until hardware lands. The channel classifier's 0.472 accuracy is below the majority-class baseline — disclosed as a calibrated weak result, not hidden behind aggregate F1 numbers.
+        <strong>What this is not:</strong> a production telecom receiver, an AI-RAN base station, a standards-compliant modem, or a scheduler. The ML dataset is synthetic. The Jetson row is <span class="sig">&lt;TO MEASURE&gt;</span> until hardware lands. The channel classifier's accuracy is close to the majority-class rate, disclosed as a calibrated weak result, not hidden behind aggregate numbers.
       </div>
     </section>
 

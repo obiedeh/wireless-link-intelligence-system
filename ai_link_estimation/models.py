@@ -87,9 +87,12 @@ def train_models(csv_path: str | Path = "data/link_conditions.csv",
         joblib.dump(model, output_dir / f"{model_name}.joblib")
 
         if model_name == "channel_classifier":
+            truth = labels[target][test_idx]
+            rayleigh_share = float(np.mean(truth))
             metrics["models"][model_name] = {
                 "target": target,
-                "accuracy": float(accuracy_score(labels[target][test_idx], pred)),
+                "accuracy": float(accuracy_score(truth, pred)),
+                "majority_class_rate": max(rayleigh_share, 1.0 - rayleigh_share),
             }
         else:
             metrics["models"][model_name] = {
@@ -97,6 +100,13 @@ def train_models(csv_path: str | Path = "data/link_conditions.csv",
                 "mae": float(mean_absolute_error(labels[target][test_idx], pred)),
                 "r2": float(r2_score(labels[target][test_idx], pred)),
             }
+            if model_name == "snr_estimator":
+                rayleigh = labels["channel_is_rayleigh"][test_idx] == 1
+                truth = labels[target][test_idx]
+                metrics["models"][model_name]["mae_by_channel"] = {
+                    "awgn": float(mean_absolute_error(truth[~rayleigh], pred[~rayleigh])),
+                    "rayleigh": float(mean_absolute_error(truth[rayleigh], pred[rayleigh])),
+                }
 
     metrics["comparison_examples"] = _comparison_examples(rows, test_idx, labels, predictions)
     metrics_path = output_dir / "metrics.json"
@@ -156,9 +166,13 @@ def write_comparison_report(metrics: dict[str, Any],
         "",
         f"- SNR estimation MAE: {snr['mae']:.3f} dB",
         f"- SNR estimation R2: {snr['r2']:.3f}",
+        *([f"- SNR estimation MAE by channel: AWGN {snr['mae_by_channel']['awgn']:.3f} dB, "
+           f"Rayleigh {snr['mae_by_channel']['rayleigh']:.3f} dB"] if "mae_by_channel" in snr else []),
         f"- BER prediction MAE: {ber['mae']:.6f}",
         f"- BER prediction R2: {ber['r2']:.3f}",
-        f"- AWGN vs Rayleigh classification accuracy: {channel['accuracy']:.3f}",
+        f"- AWGN vs Rayleigh classification accuracy: {channel['accuracy']:.3f}"
+        + (f" (majority-class rate {channel['majority_class_rate']:.3f})"
+           if "majority_class_rate" in channel else ""),
         f"- Link-quality scoring MAE: {quality['mae']:.3f}",
         "",
         "## Classical BER vs Predicted BER",
@@ -175,8 +189,8 @@ def write_comparison_report(metrics: dict[str, Any],
 
     if channel["accuracy"] < 0.65:
         classifier_note = (
-            "- The channel classifier is weak in this run. Treat that as a useful negative result: "
-            "the current feature set supports SNR/BER estimation better than channel-type recognition."
+            "- The channel classifier is weak in this run, close to the majority-class rate. Treat that "
+            "as a useful negative result: the current feature set carries little channel-type signal."
         )
     else:
         classifier_note = (
@@ -192,6 +206,8 @@ def write_comparison_report(metrics: dict[str, Any],
         "- ML predictions are estimates from synthetic features and should be validated against any real RF capture before use.",
         "- AWGN/Rayleigh classification is a controlled two-class experiment, not generalized channel recognition.",
         classifier_note,
+        "- SNR error is larger on Rayleigh links than on AWGN links: fading scales the "
+        "constellation, and symbol-averaged statistics cannot fully separate a deep fade from low SNR.",
         "- SNR error is reported on held-out synthetic samples and should not be treated as field performance.",
     ])
     output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")

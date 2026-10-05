@@ -57,13 +57,13 @@ jobs:
         run: python run_channel_estimation_comparison.py --n-train-examples 500 --epochs 8 --n-realizations 20 --snr-min 0 --snr-max 24 --snr-step 6 --seed 7 --output-csv reports/channel_estimation_comparison.csv --output-plot reports/channel_estimation_comparison.svg
 
       - name: Generate evidence dataset
-        run: python generate_dataset.py --output data/link_conditions.csv --samples 60 --num-bits 800 --seed 7
+        run: python generate_dataset.py --output data/link_conditions.csv --samples 500 --num-bits 4000 --seed 7
 
       - name: Train link estimators
         run: python train_link_models.py --dataset data/link_conditions.csv --output-dir models --report reports/link_estimation_report.md --metrics-report reports/link_estimation_metrics.json
 
       - name: Train PyTorch SNR estimator + INT8 ONNX
-        run: python train_snr_torch.py --dataset data/link_conditions.csv --metrics-output reports/snr_quantization_comparison.json --epochs 50
+        run: python train_snr_torch.py --dataset data/link_conditions.csv --metrics-output reports/snr_quantization_comparison.json
 
       - name: Build dashboard
         run: python build_dashboard.py --output-dir reports

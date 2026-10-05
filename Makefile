@@ -43,7 +43,7 @@ snr-torch: .venv
 	$(PYTHON) train_snr_torch.py --dataset data/link_conditions.csv --metrics-output reports/snr_quantization_comparison.json
 
 generate-evidence: .venv
-	$(PYTHON) generate_dataset.py --output data/link_conditions.csv --samples 120 --num-bits 1200 --seed 7
+	$(PYTHON) generate_dataset.py --output data/link_conditions.csv --samples 500 --num-bits 4000 --seed 7
 
 train-evidence: .venv
 	$(PYTHON) train_link_models.py --dataset data/link_conditions.csv --output-dir models --report reports/link_estimation_report.md --metrics-report reports/link_estimation_metrics.json

@@ -19,22 +19,27 @@
   "models": {
     "snr_estimator": {
       "target": "snr_db",
-      "mae": 0.11809809437472302,
-      "r2": 0.9994298764908749
+      "mae": 2.3556117011286686,
+      "r2": 0.6867736017768873,
+      "mae_by_channel": {
+        "awgn": 1.3321498315196423,
+        "rayleigh": 3.300345734613925
+      }
     },
     "ber_predictor": {
       "target": "ber",
-      "mae": 0.0004532513293650797,
-      "r2": 0.9678677559554276
+      "mae": 0.0035913031308968725,
+      "r2": 0.9156096334106855
     },
     "channel_classifier": {
       "target": "channel_is_rayleigh",
-      "accuracy": 0.472
+      "accuracy": 0.552,
+      "majority_class_rate": 0.52
     },
     "link_quality_scorer": {
       "target": "link_quality_score",
-      "mae": 4.088586263478972,
-      "r2": 0.9038996495029021
+      "mae": 5.832423880578892,
+      "r2": 0.7676787803635405
     }
   },
   "comparison_examples": [
@@ -42,133 +47,133 @@
       "sample_id": 247,
       "channel": "rayleigh",
       "predicted_channel": "awgn",
-      "snr_db": 6.13817408142882,
-      "predicted_snr_db": 6.133539709578491,
+      "snr_db": 14.539763675840117,
+      "predicted_snr_db": 6.448572708557511,
       "measured_ber": 0.0,
-      "predicted_ber": 0.0,
-      "quality_score": 55.649982269941056,
-      "predicted_quality_score": 61.50279753666805
+      "predicted_ber": 7.493489583333337e-05,
+      "quality_score": 74.90362509046695,
+      "predicted_quality_score": 59.491220477848685
     },
     {
       "sample_id": 239,
       "channel": "awgn",
-      "predicted_channel": "awgn",
-      "snr_db": 5.874043655340083,
-      "predicted_snr_db": 5.989493466478288,
+      "predicted_channel": "rayleigh",
+      "snr_db": 4.256038662189631,
+      "predicted_snr_db": 4.8453814101821955,
       "measured_ber": 0.0,
       "predicted_ber": 0.0,
-      "quality_score": 63.044683376821034,
-      "predicted_quality_score": 62.57485718687544
+      "quality_score": 59.3367552675179,
+      "predicted_quality_score": 58.6965946013304
     },
     {
       "sample_id": 70,
       "channel": "rayleigh",
       "predicted_channel": "rayleigh",
-      "snr_db": 17.603132473426857,
-      "predicted_snr_db": 17.826359351112178,
-      "measured_ber": 0.0,
-      "predicted_ber": 0.0,
-      "quality_score": 81.92384525160323,
-      "predicted_quality_score": 87.79668642581746
+      "snr_db": 2.7708757841563783,
+      "predicted_snr_db": 0.5503476757784742,
+      "measured_ber": 0.03925,
+      "predicted_ber": 0.04521984403617215,
+      "quality_score": 44.400757005358365,
+      "predicted_quality_score": 41.72513757222776
     },
     {
       "sample_id": 136,
-      "channel": "awgn",
-      "predicted_channel": "awgn",
-      "snr_db": 14.375586548140493,
-      "predicted_snr_db": 14.564804660311301,
+      "channel": "rayleigh",
+      "predicted_channel": "rayleigh",
+      "snr_db": 14.945069509633463,
+      "predicted_snr_db": 3.063182672906607,
       "measured_ber": 0.0,
-      "predicted_ber": 0.0,
-      "quality_score": 82.52738583948864,
-      "predicted_quality_score": 79.90093736156867
+      "predicted_ber": 0.0009838839285714288,
+      "quality_score": 75.83245095957669,
+      "predicted_quality_score": 53.687886954063586
     },
     {
       "sample_id": 387,
-      "channel": "rayleigh",
+      "channel": "awgn",
       "predicted_channel": "rayleigh",
-      "snr_db": 13.943196137442328,
-      "predicted_snr_db": 14.095385812176065,
+      "snr_db": 14.695752693399438,
+      "predicted_snr_db": 13.414640229024451,
       "measured_ber": 0.0,
       "predicted_ber": 0.0,
-      "quality_score": 73.53649114830534,
-      "predicted_quality_score": 76.88030805037948
+      "quality_score": 83.26109992237372,
+      "predicted_quality_score": 76.6844178339937
     },
     {
       "sample_id": 348,
       "channel": "awgn",
-      "predicted_channel": "awgn",
-      "snr_db": 3.2248957227487063,
-      "predicted_snr_db": 3.5162740381945845,
+      "predicted_channel": "rayleigh",
+      "snr_db": 9.575784124110678,
+      "predicted_snr_db": 7.60644761332207,
       "measured_ber": 0.0,
       "predicted_ber": 0.0,
-      "quality_score": 56.97371936463246,
-      "predicted_quality_score": 54.32745923833089
+      "quality_score": 71.52783861775364,
+      "predicted_quality_score": 61.214276423754896
     },
     {
       "sample_id": 83,
       "channel": "awgn",
-      "predicted_channel": "rayleigh",
-      "snr_db": -2.9279229269977196,
-      "predicted_snr_db": -2.7265244637516437,
-      "measured_ber": 0.0225,
-      "predicted_ber": 0.01922227678571429,
-      "quality_score": 42.974999999999994,
-      "predicted_quality_score": 38.05306345752293
+      "predicted_channel": "awgn",
+      "snr_db": 12.292159778206202,
+      "predicted_snr_db": 11.834841816134249,
+      "measured_ber": 0.0,
+      "predicted_ber": 0.0,
+      "quality_score": 77.75286615838921,
+      "predicted_quality_score": 71.94518141368548
     },
     {
       "sample_id": 234,
       "channel": "rayleigh",
-      "predicted_channel": "awgn",
-      "snr_db": 1.0042330806944335,
-      "predicted_snr_db": 0.9340772352058018,
-      "measured_ber": 0.0015,
-      "predicted_ber": 0.0005484027777777783,
-      "quality_score": 43.74970080992473,
-      "predicted_quality_score": 48.46388865975531
+      "predicted_channel": "rayleigh",
+      "snr_db": 15.618414921926778,
+      "predicted_snr_db": 13.374505696827034,
+      "measured_ber": 0.0,
+      "predicted_ber": 0.0,
+      "quality_score": 77.37553419608221,
+      "predicted_quality_score": 77.13130666308425
     },
     {
       "sample_id": 456,
-      "channel": "awgn",
-      "predicted_channel": "rayleigh",
-      "snr_db": 7.672864115046364,
-      "predicted_snr_db": 7.796371504523049,
+      "channel": "rayleigh",
+      "predicted_channel": "awgn",
+      "snr_db": 12.45398905428738,
+      "predicted_snr_db": 14.432155450611457,
       "measured_ber": 0.0,
       "predicted_ber": 0.0,
-      "quality_score": 67.16698026364793,
-      "predicted_quality_score": 62.18800320679812
+      "quality_score": 70.12372491607525,
+      "predicted_quality_score": 79.416182690377
     },
     {
       "sample_id": 315,
-      "channel": "awgn",
+      "channel": "rayleigh",
       "predicted_channel": "rayleigh",
-      "snr_db": 5.652927779587307,
-      "predicted_snr_db": 5.907642339846145,
+      "snr_db": 11.767244117660297,
+      "predicted_snr_db": 10.786279940305842,
       "measured_ber": 0.0,
       "predicted_ber": 0.0,
-      "quality_score": 62.53795949488759,
-      "predicted_quality_score": 59.24357233413566
+      "quality_score": 68.54993443630487,
+      "predicted_quality_score": 67.9036642408334
     },
     {
       "sample_id": 357,
-      "channel": "rayleigh",
-      "predicted_channel": "rayleigh",
-      "snr_db": 11.863511514573105,
-      "predicted_snr_db": 11.90533716238156,
+      "channel": "awgn",
+      "predicted_channel": "awgn",
+      "snr_db": 15.271576441318345,
+      "predicted_snr_db": 14.720004873572725,
       "measured_ber": 0.0,
       "predicted_ber": 0.0,
-      "quality_score": 68.7705472208967,
-      "predicted_quality_score": 71.63612449271957
+      "quality_score": 84.58069601135453,
+      "predicted_quality_score": 78.5617697936146
     },
     {
       "sample_id": 440,
       "channel": "rayleigh",
-      "predicted_channel": "rayleigh",
-      "snr_db": 9.047348924139774,
-      "predicted_snr_db": 9.326652693990061,
+      "predicted_channel": "awgn",
+      "snr_db": 13.805759610402077,
+      "predicted_snr_db": 6.595840432220692,
       "measured_ber": 0.0,
       "predicted_ber": 0.0,
-      "quality_score": 62.31684128448699,
-      "predicted_quality_score": 64.49538291804694
+      "quality_score": 73.22153244050476,
+      "predicted_quality_score": 59.119049950303676
     }
   ]
 }
