@@ -12,3 +12,4 @@ data/*.csv
 models/*.joblib
 models/metrics.json
 models/onnx/
+*.egg-info/

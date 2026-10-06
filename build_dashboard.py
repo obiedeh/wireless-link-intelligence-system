@@ -383,6 +383,12 @@ def _jetson_section_html(reports_dir: Path) -> str:
         fmt_row("ONNX FP32", models.get("fp32", {})),
         fmt_row("ONNX INT8", models.get("int8", {})),
     ]))
+    providers_seen = {p for m in models.values() for p in m.get("providers_used", [])}
+    provider_used = ", ".join(sorted(providers_seen)) or "unknown"
+    provider_note = (
+        " (Thor CPU only; no CUDA or TensorRT execution provider was available, so this is not a GPU number)"
+        if providers_seen == {"CPUExecutionProvider"} else ""
+    )
     device_info_lines = [
         f"<li><strong>{escape(k)}:</strong> {escape(str(v))}</li>"
         for k, v in device.items()
@@ -390,7 +396,7 @@ def _jetson_section_html(reports_dir: Path) -> str:
     return f"""
     <section>
       <h2>Jetson AGX Thor benchmark — measured</h2>
-      <p class="lede">Latency p50/p95/p99 (tail-aware, not just mean) and throughput on the actual device for both FP32 and INT8 ONNX models. Provider auto-selected: TensorRT > CUDA > CPU.</p>
+      <p class="lede">Latency p50/p95/p99 (tail-aware, not just mean) and throughput on the actual device for both FP32 and INT8 ONNX models. Provider auto-selected in priority order TensorRT > CUDA > CPU; this run used <span class="sig">{escape(provider_used)}</span>{provider_note}.</p>
       <div class="panel">
         <table>
           <thead><tr><th>Model</th><th>p50 (µs)</th><th>p95 (µs)</th><th>p99 (µs)</th><th>Inferences / sec</th><th>Provider</th></tr></thead>
@@ -593,6 +599,22 @@ def build_dashboard(
     chest_section = _channel_estimation_section_html(output_dir)
     quant_section = _int8_quantization_section_html(output_dir)
     jetson_section = _jetson_section_html(output_dir)
+    jetson_header_phrase = (
+        "ONNX Runtime latency measured on the Jetson AGX Thor CPU" if jetson_data
+        else "a Jetson AGX Thor benchmark template ready to run"
+    )
+    jetson_lede_phrase = (
+        'Jetson AGX Thor latency is <strong>measured</strong> (ONNX Runtime CPU execution provider; see the Jetson section).' if jetson_data
+        else 'Jetson latency is <strong>not yet measured</strong>; the benchmark template is ready to run on the Thor.'
+    )
+    jetson_scope_phrase = (
+        'Jetson latency is a CPU-execution-provider measurement on the Thor, not a GPU or TensorRT result' if jetson_data
+        else 'Jetson latency remains pending unless <span class="sig">reports/jetson_inference_benchmark.json</span> exists'
+    )
+    jetson_limit_phrase = (
+        'The Jetson row is a Thor CPU (ONNX Runtime <span class="sig">CPUExecutionProvider</span>) measurement; no GPU or TensorRT latency is claimed.' if jetson_data
+        else 'The Jetson row is <span class="sig">&lt;TO MEASURE&gt;</span> until it is run on the Thor.'
+    )
     reliability_section = _link_reliability_section_html(output_dir)
 
     # ----- Full HTML -----
@@ -675,7 +697,7 @@ def build_dashboard(
 <body>
   <header>
     <h1>Wireless Link Intelligence System</h1>
-    <p class="sub">An AI-for-RAN reference: CP-OFDM with adaptive Gray-coded QAM (M = 4 / 16 / 64 / 256), 3GPP TR 38.901 TDL-A/B/C channel models, a pilot-based channel-estimation comparison (LS / MMSE / neural), an INT8 ONNX deployment pipeline, and a Jetson AGX Thor benchmark template ready to run. Every committed number is regenerable by <span class="sig">make verify</span>.</p>
+    <p class="sub">An AI-for-RAN reference: CP-OFDM with adaptive Gray-coded QAM (M = 4 / 16 / 64 / 256), 3GPP TR 38.901 TDL-A/B/C channel models, a pilot-based channel-estimation comparison (LS / MMSE / neural), an INT8 ONNX deployment pipeline, and {jetson_header_phrase}. Every committed number is regenerable by <span class="sig">make verify</span>.</p>
     <div class="topnav">
       <a href="../README.md">README</a>
       <a href="../TECH_BRIEF.md">Tech brief</a>
@@ -687,7 +709,7 @@ def build_dashboard(
 
     <section>
       <h2>Headline evidence</h2>
-      <p class="lede">Five KPIs at a glance — model quality, test coverage, and the honest disclosure that the channel classifier is weak on this feature set. Jetson latency is <strong>not yet measured</strong>; the benchmark template is ready to run on the Thor.</p>
+      <p class="lede">Five KPIs at a glance — model quality, test coverage, and the honest disclosure that the channel classifier is weak on this feature set. {jetson_lede_phrase}</p>
       <div class="metrics">
         {''.join(kpi_cards)}
       </div>
@@ -704,7 +726,7 @@ def build_dashboard(
     <section>
       <h2>Honest boundaries</h2>
       <div class="callout">
-        <strong>Scope boundary:</strong> ML data is synthetic; the receiver is a simulation testbed, not production PHY; LDPC, HARQ, MIMO, and scheduler validation are not implemented; Jetson latency remains pending unless <span class="sig">reports/jetson_inference_benchmark.json</span> exists; channel classifier accuracy is weak and disclosed.
+        <strong>Scope boundary:</strong> ML data is synthetic; the receiver is a simulation testbed, not production PHY; LDPC, HARQ, MIMO, and scheduler validation are not implemented; {jetson_scope_phrase}; channel classifier accuracy is weak and disclosed.
       </div>
     </section>
 
@@ -785,7 +807,7 @@ def build_dashboard(
     <section>
       <h2>Limitations</h2>
       <div class="callout red">
-        <strong>What this is not:</strong> a production telecom receiver, an AI-RAN base station, a standards-compliant modem, or a scheduler. The ML dataset is synthetic. The Jetson row is <span class="sig">&lt;TO MEASURE&gt;</span> until it is run on the Thor. The channel classifier's accuracy is close to the majority-class rate, disclosed as a calibrated weak result, not hidden behind aggregate numbers.
+        <strong>What this is not:</strong> a production telecom receiver, an AI-RAN base station, a standards-compliant modem, or a scheduler. The ML dataset is synthetic. {jetson_limit_phrase} The channel classifier's accuracy is close to the majority-class rate, disclosed as a calibrated weak result, not hidden behind aggregate numbers.
       </div>
     </section>
 

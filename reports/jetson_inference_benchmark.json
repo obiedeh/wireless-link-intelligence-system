@@ -1,0 +1,45 @@
+{
+  "device_info": {
+    "jetpack_marker_excerpt": "# R38 (release), REVISION: 4.0, GCID: 43443517, BOARD: generic, EABI: aarch64, DATE: Wed Dec 31 00:15:19 UTC 2025",
+    "jetpack_marker_file": "/etc/nv_tegra_release",
+    "jetson_model": "NVIDIA Jetson AGX Thor Developer Kit",
+    "machine": "aarch64",
+    "platform": "Linux-6.8.12-tegra-aarch64-with-glibc2.39",
+    "processor": "aarch64",
+    "python": "3.12.3"
+  },
+  "models": {
+    "fp32": {
+      "batch_size": 1,
+      "input_dim": 12,
+      "mean_us": 5.994706740602851,
+      "model_path": "models/onnx/snr_estimator_fp32.onnx",
+      "p50_us": 5.943933501839638,
+      "p95_us": 6.073969416320324,
+      "p99_us": 6.954042473807933,
+      "providers_used": [
+        "CPUExecutionProvider"
+      ],
+      "runs": 5000,
+      "std_us": 1.8901539470654536,
+      "throughput_infs_per_sec": 166813.83148017616,
+      "warmup": 200
+    },
+    "int8": {
+      "batch_size": 1,
+      "input_dim": 12,
+      "mean_us": 10.03639658447355,
+      "model_path": "models/onnx/snr_estimator_int8.onnx",
+      "p50_us": 8.78702849149704,
+      "p95_us": 9.305012645199895,
+      "p99_us": 10.406947694718838,
+      "providers_used": [
+        "CPUExecutionProvider"
+      ],
+      "runs": 5000,
+      "std_us": 61.7358382091867,
+      "throughput_infs_per_sec": 99637.3540626139,
+      "warmup": 200
+    }
+  }
+}

@@ -21,7 +21,7 @@
     "n_samples": 500,
     "seed": 42
   },
-  "interpretation": "Measured in this run on CPU: INT8 is 1.92x smaller and about the same speed per sample compared with FP32 ONNX, with an MAE change of +0.0034 dB on the holdout. Jetson latency is not measured yet (recipe in JETSON_BENCHMARK_GUIDE.md).",
+  "interpretation": "Measured in this run on CPU: INT8 is 1.92x smaller and about the same speed per sample compared with FP32 ONNX, with an MAE change of +0.0034 dB on the holdout. Jetson AGX Thor latency is reported separately in reports/jetson_inference_benchmark.json.",
   "onnx_fp32": {
     "file_size_bytes": 12445,
     "latency_us_per_sample": 9.77444300008301,

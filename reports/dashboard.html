@@ -88,7 +88,7 @@ body{margin:0}
 <body><div class="ee-band"><div class="ee-in"><a class="ee-mark" href="https://embodiededge.ai"><i></i>EmbodiedEdge <span>Labs · Evidence</span></a><nav><a href="https://github.com/obiedeh/wireless-link-intelligence-system">Repository</a><a href="https://embodiededge.ai">Lab</a><a href="https://github.com/obiedeh">Obinna Edeh</a></nav></div></div>
   <header>
     <div class="ee-eyebrow">Wireless signal AI · Simulation evidence</div><h1><span class="ee-g">Wireless</span> <span class="ee-b">Link Intelligence</span> System</h1>
-    <p class="sub">An AI-for-RAN reference: CP-OFDM with adaptive Gray-coded QAM (M = 4 / 16 / 64 / 256), 3GPP TR 38.901 TDL-A/B/C channel models, a pilot-based channel-estimation comparison (LS / MMSE / neural), an INT8 ONNX deployment pipeline, and a Jetson AGX Thor benchmark template ready to run. Every committed number is regenerable by <span class="sig">make verify</span>.</p>
+    <p class="sub">An AI-for-RAN reference: CP-OFDM with adaptive Gray-coded QAM (M = 4 / 16 / 64 / 256), 3GPP TR 38.901 TDL-A/B/C channel models, a pilot-based channel-estimation comparison (LS / MMSE / neural), an INT8 ONNX deployment pipeline, and ONNX Runtime latency measured on the Jetson AGX Thor CPU. Every committed number is regenerable by <span class="sig">make verify</span>.</p>
     <div class="topnav">
       <a href="../README.md">README</a>
       <a href="../TECH_BRIEF.md">Tech brief</a>
@@ -100,9 +100,9 @@ body{margin:0}
 
     <section>
       <h2>Headline evidence</h2>
-      <p class="lede">Five KPIs at a glance — model quality, test coverage, and the honest disclosure that the channel classifier is weak on this feature set. Jetson latency is <strong>not yet measured</strong>; the benchmark template is ready to run on the Thor.</p>
+      <p class="lede">Five KPIs at a glance — model quality, test coverage, and the honest disclosure that the channel classifier is weak on this feature set. Jetson AGX Thor latency is <strong>measured</strong> (ONNX Runtime CPU execution provider; see the Jetson section).</p>
       <div class="metrics">
-        <article class="metric-card "><span>Adaptive QAM</span><strong>4 / 16 / 64 / 256</strong><small>CP-OFDM, Gray-coded square QAM, BER vs SNR matches textbook</small></article><article class="metric-card "><span>3GPP TR 38.901 channels</span><strong>TDL-A / B / C</strong><small>Ensemble BLER on N=80 realisations × 4096 bits per point</small></article><article class="metric-card money"><span>Neural channel estimator</span><strong>Wins at low SNR</strong><small>DeepRx-pattern MLP on TDL-C · LS / MMSE / Neural compared</small></article><article class="metric-card "><span>INT8 quantization</span><strong>~1.0× speedup</strong><small>Dynamic PTQ on ONNX · &lt;0.01 dB drift · smaller file</small></article><article class="metric-card warn"><span>Jetson AGX Thor</span><strong>Pending run</strong><small>ONNX + template ready · pending run</small></article>
+        <article class="metric-card "><span>Adaptive QAM</span><strong>4 / 16 / 64 / 256</strong><small>CP-OFDM, Gray-coded square QAM, BER vs SNR matches textbook</small></article><article class="metric-card "><span>3GPP TR 38.901 channels</span><strong>TDL-A / B / C</strong><small>Ensemble BLER on N=80 realisations × 4096 bits per point</small></article><article class="metric-card money"><span>Neural channel estimator</span><strong>Wins at low SNR</strong><small>DeepRx-pattern MLP on TDL-C · LS / MMSE / Neural compared</small></article><article class="metric-card "><span>INT8 quantization</span><strong>~1.0× speedup</strong><small>Dynamic PTQ on ONNX · &lt;0.01 dB drift · smaller file</small></article><article class="metric-card "><span>Jetson AGX Thor</span><strong>Measured</strong><small>FP32 + INT8 on actual device</small></article>
       </div>
     </section>
 
@@ -115,14 +115,14 @@ body{margin:0}
 <article class="decision-card"><span class="status-good">Good</span><h3>Estimator result</h3><p>Neural denoises best at low SNR, MMSE wins once priors dominate at high SNR, and LS is the transparent baseline.</p></article>
 <article class="decision-card"><span class="status-good">Good</span><h3>Edge deployment result</h3><p>ONNX INT8 is 1.9x smaller than FP32 ONNX with +0.003 dB MAE drift; CPU latency ratio this run 1.0x, too small a model for a consistent speedup.</p></article>
 <article class="decision-card"><span class="status-risk">Risk</span><h3>Weak result</h3><p>Channel classifier accuracy is 0.552; current constellation statistics do not separate AWGN vs Rayleigh reliably.</p></article>
-<article class="decision-card"><span class="status-warn">Pending</span><h3>Hardware validation status</h3><p>Jetson template is ready; no hardware latency is claimed until benchmark JSON exists.</p></article>
+<article class="decision-card"><span class="status-good">Measured</span><h3>Hardware validation status</h3><p>Jetson AGX Thor p50/p95/p99 latency is available.</p></article>
       </div>
     </section>
 
     <section>
       <h2>Honest boundaries</h2>
       <div class="callout">
-        <strong>Scope boundary:</strong> ML data is synthetic; the receiver is a simulation testbed, not production PHY; LDPC, HARQ, MIMO, and scheduler validation are not implemented; Jetson latency remains pending unless <span class="sig">reports/jetson_inference_benchmark.json</span> exists; channel classifier accuracy is weak and disclosed.
+        <strong>Scope boundary:</strong> ML data is synthetic; the receiver is a simulation testbed, not production PHY; LDPC, HARQ, MIMO, and scheduler validation are not implemented; Jetson latency is a CPU-execution-provider measurement on the Thor, not a GPU or TensorRT result; channel classifier accuracy is weak and disclosed.
       </div>
     </section>
 
@@ -225,16 +225,25 @@ body{margin:0}
             <tr><td><strong>ONNX INT8 (dyn PTQ)</strong></td><td>2.3300 dB</td><td>6,487 B</td><td>9.50</td></tr>
           </tbody>
         </table>
-        <p class="lede" style="margin-top:8px;">Measured in this run on CPU: INT8 is 1.92x smaller and about the same speed per sample compared with FP32 ONNX, with an MAE change of +0.0034 dB on the holdout. Jetson latency is not measured yet (recipe in JETSON_BENCHMARK_GUIDE.md).</p>
+        <p class="lede" style="margin-top:8px;">Measured in this run on CPU: INT8 is 1.92x smaller and about the same speed per sample compared with FP32 ONNX, with an MAE change of +0.0034 dB on the holdout. Jetson AGX Thor latency is reported separately in reports/jetson_inference_benchmark.json.</p>
       </div>
     </section>
     
 
     
     <section>
-      <h2>Jetson AGX Thor benchmark: pending run</h2>
-      <div class="callout">
-        <strong>Pending measurement.</strong> The ONNX FP32 and INT8 models are exported, the benchmark template is ready, and the Jetson AGX Thor is in hand. Latency p50/p95/p99 will land here after a 30-second run on the device. See <a href="../JETSON_BENCHMARK_GUIDE.md"><code>JETSON_BENCHMARK_GUIDE.md</code></a> for the exact commands. Until then this row is labelled <span class="sig">&lt;TO MEASURE&gt;</span>.
+      <h2>Jetson AGX Thor benchmark — measured</h2>
+      <p class="lede">Latency p50/p95/p99 (tail-aware, not just mean) and throughput on the actual device for both FP32 and INT8 ONNX models. Provider auto-selected in priority order TensorRT > CUDA > CPU; this run used <span class="sig">CPUExecutionProvider</span> (Thor CPU only; no CUDA or TensorRT execution provider was available, so this is not a GPU number).</p>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Model</th><th>p50 (µs)</th><th>p95 (µs)</th><th>p99 (µs)</th><th>Inferences / sec</th><th>Provider</th></tr></thead>
+          <tbody><tr><td><strong>ONNX FP32</strong></td><td>5.94</td><td>6.07</td><td>6.95</td><td>166,814</td><td>CPUExecutionProvider</td></tr>
+<tr><td><strong>ONNX INT8</strong></td><td>8.79</td><td>9.31</td><td>10.41</td><td>99,637</td><td>CPUExecutionProvider</td></tr></tbody>
+        </table>
+      </div>
+      <div class="panel band" style="margin-top:14px;">
+        <h3>Device</h3>
+        <ul><li><strong>jetpack_marker_excerpt:</strong> # R38 (release), REVISION: 4.0, GCID: 43443517, BOARD: generic, EABI: aarch64, DATE: Wed Dec 31 00:15:19 UTC 2025</li><li><strong>jetpack_marker_file:</strong> /etc/nv_tegra_release</li><li><strong>jetson_model:</strong> NVIDIA Jetson AGX Thor Developer Kit</li><li><strong>machine:</strong> aarch64</li><li><strong>platform:</strong> Linux-6.8.12-tegra-aarch64-with-glibc2.39</li><li><strong>processor:</strong> aarch64</li><li><strong>python:</strong> 3.12.3</li></ul>
       </div>
     </section>
     
@@ -314,7 +323,7 @@ body{margin:0}
     <section>
       <h2>Limitations</h2>
       <div class="callout red">
-        <strong>What this is not:</strong> a production telecom receiver, an AI-RAN base station, a standards-compliant modem, or a scheduler. The ML dataset is synthetic. The Jetson row is <span class="sig">&lt;TO MEASURE&gt;</span> until it is run on the Thor. The channel classifier's accuracy is close to the majority-class rate, disclosed as a calibrated weak result, not hidden behind aggregate numbers.
+        <strong>What this is not:</strong> a production telecom receiver, an AI-RAN base station, a standards-compliant modem, or a scheduler. The ML dataset is synthetic. The Jetson row is a Thor CPU (ONNX Runtime <span class="sig">CPUExecutionProvider</span>) measurement; no GPU or TensorRT latency is claimed. The channel classifier's accuracy is close to the majority-class rate, disclosed as a calibrated weak result, not hidden behind aggregate numbers.
       </div>
     </section>
 

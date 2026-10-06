@@ -1,6 +1,6 @@
 # Wireless Link Intelligence System
 
-**Signal-processing correctness + AI-assisted link estimation + edge deployment evidence.** A production-discipline reference for physical-layer AI: a classical QPSK baseband simulator with deterministic BER vs SNR sweeps, four scikit-learn estimators that learn link conditions from constellation statistics, an ONNX export path validated against a Jetson benchmark template, and end-to-end reproducibility from a fresh clone in under five minutes.
+**Signal-processing correctness + AI-assisted link estimation + edge deployment evidence.** A production-discipline reference for physical-layer AI: a classical QPSK baseband simulator with deterministic BER vs SNR sweeps, four scikit-learn estimators that learn link conditions from constellation statistics, an ONNX export path with ONNX Runtime latency measured on a Jetson AGX Thor, and end-to-end reproducibility from a fresh clone in under five minutes.
 
 The deliverable is the engineering pattern, not a production receiver. Every BER number is regenerable from a deterministic seed; every ML metric is reported on a held-out split; the channel classifier's weak 0.552 accuracy (majority-class rate 0.520) is surfaced as a calibrated finding rather than hidden in a footnote.
 
@@ -12,9 +12,9 @@ The deliverable is the engineering pattern, not a production receiver. Every BER
 
 AI-RAN and edge-AI wireless systems depend on a measurable physical layer. Most repos in this space either skip the signal-processing work (claim ML wins without showing the classical baseline) or skip the discipline (claim production-grade results from notebook-only experiments). Neither is a defensible engineering pattern.
 
-This repo demonstrates the engineering pattern that makes physical-layer ML credible: **classical baseline first** (verified BER curves matching textbook predictions), **ML estimators second** (with honest holdout metrics and disclosed weaknesses), **edge deployment path third** (ONNX export + Jetson benchmark template, not yet run on the Thor).
+This repo demonstrates the engineering pattern that makes physical-layer ML credible: **classical baseline first** (verified BER curves matching textbook predictions), **ML estimators second** (with honest holdout metrics and disclosed weaknesses), **edge deployment path third** (ONNX export + ONNX Runtime latency measured on the Jetson AGX Thor CPU).
 
-**The discipline is the deliverable.** The QPSK math is textbook, the dataset is synthetic, the Jetson latency row stays `<TO MEASURE>` until the benchmark is run on the Thor. What's defensible end-to-end is the methodology, the reproducibility, and the calibration of confidence.
+**The discipline is the deliverable.** The QPSK math is textbook, the dataset is synthetic, the Jetson latency row is a Thor CPU measurement (ONNX Runtime `CPUExecutionProvider`), not a GPU or TensorRT result. What's defensible end-to-end is the methodology, the reproducibility, and the calibration of confidence.
 
 ---
 
@@ -26,7 +26,7 @@ This repo demonstrates the engineering pattern that makes physical-layer ML cred
 | **3GPP channel models** | TDL-A / TDL-B / TDL-C from TR 38.901 §7.7.2 | `qpsk_link/tdl_channel.py` · `reports/bler_full_tdl_ofdm.csv` |
 | **Channel estimation** | LS / MMSE / Neural (PyTorch) head-to-head on TDL-C — neural wins at low SNR | `qpsk_link/channel_estimation.py` · `reports/channel_estimation_comparison.csv` |
 | **Edge deployment** | PyTorch FP32 → ONNX FP32 → ONNX INT8 (dynamic PTQ), 1.92× smaller file, +0.003 dB MAE drift; no consistent CPU speedup at this model size (about 10 µs per sample) | `train_snr_torch.py` · `reports/snr_quantization_comparison.json` |
-| **Jetson AGX Thor** | not yet measured; template ready, run via `JETSON_BENCHMARK_GUIDE.md` | `edge/jetson_benchmark_template.py` |
+| **Jetson AGX Thor** | ONNX Runtime on the Thor CPU (`CPUExecutionProvider`), batch 1: FP32 p50/p95/p99 5.94 / 6.07 / 6.95 µs, 166,814 inferences/s; INT8 8.79 / 9.31 / 10.41 µs, 99,637 inferences/s | `edge/jetson_benchmark_template.py` · `reports/jetson_inference_benchmark.json` |
 | AWGN BER full sweep (1M bits) | 2.42e-3 @ 0 dB → 1.83e-4 @ 2 dB → below 1e-6 sim floor at 6+ dB | `reports/ber_full_awgn.csv` |
 | Ensemble Rayleigh BER (200 × 10k bits, transmit-power-SNR) | 4.18e-2 @ 0 dB → 5.2e-4 @ 20 dB | `reports/ber_full_rayleigh.csv` |
 | SNR estimator — MAE / R² (synthetic features) | 2.36 dB / **0.687** (AWGN 1.33 dB, Rayleigh 3.30 dB) | `reports/link_estimation_metrics.json` |
@@ -51,7 +51,7 @@ It summarizes:
 - LS vs MMSE vs neural channel-estimation comparison
 - ONNX FP32/INT8 deployment path and quantization trade-off
 - weak channel classifier result disclosed instead of hidden
-- Jetson AGX Thor benchmark template ready, with latency marked pending until measured
+- Jetson AGX Thor ONNX Runtime latency measured on the Thor CPU (`reports/jetson_inference_benchmark.json`)
 
 ---
 
@@ -62,7 +62,7 @@ These are the concrete decisions that separate a clean physical-layer reference 
 - **CP-OFDM with adaptive QAM — not just QPSK.** `qpsk_link/ofdm.py` implements a 64-subcarrier CP-OFDM modem with Gray-coded square QAM at M = 4 / 16 / 64 / 256. Constellations normalised to unit average symbol energy; Gray property verified by an explicit test that walks the I/Q grid and checks every neighbour pair has Hamming distance exactly 1. The resulting BER vs SNR curves match textbook 5G NR link-adaptation tables.
 - **3GPP TR 38.901 TDL-A / TDL-B / TDL-C channels.** `qpsk_link/tdl_channel.py` transcribes the literal NLOS tap profiles from TR 38.901 §7.7.2 Tables 7.7.2-1/2/3. Block fading per realisation, power normalised so `E[Σ|h|²] = 1`. Ensemble BLER curves committed to `reports/bler_full_tdl_ofdm.csv`. The honest finding (BLER ~10% even at 30 dB without coding) is the signal that motivates LDPC + HARQ — surfaced, not polished away.
 - **Pilot-based channel estimation with LS / MMSE / neural compared head-to-head.** `qpsk_link/channel_estimation.py` runs all three on the same TDL-C realisations and reports both channel-MSE and resulting BLER. The PyTorch MLP is the DeepRx pattern in miniature; the calibrated finding is that neural wins at low SNR (denoising), MMSE wins at high SNR (correct prior + low noise = closed-form optimum). LS lags everywhere.
-- **PyTorch + INT8 ONNX deployment pipeline.** `train_snr_torch.py` trains a small MLP, exports FP32 ONNX, dynamic-PTQ quantises to INT8 ONNX, and benchmarks holdout MAE + file size + CPU latency for all three forms. Measured: 1.92× smaller file with +0.003 dB accuracy drift. At about 10 µs per sample this MLP is too small for INT8 to give a consistent CPU speedup; the latency ratio moves run to run. INT8 ONNX lands directly on Jetson AGX Thor via `edge/jetson_benchmark_template.py`.
+- **PyTorch + INT8 ONNX deployment pipeline.** `train_snr_torch.py` trains a small MLP, exports FP32 ONNX, dynamic-PTQ quantises to INT8 ONNX, and benchmarks holdout MAE + file size + CPU latency for all three forms. Measured: 1.92× smaller file with +0.003 dB accuracy drift. At about 10 µs per sample this MLP is too small for INT8 to give a consistent CPU speedup; the latency ratio moves run to run. On the Jetson AGX Thor (ONNX Runtime `CPUExecutionProvider`, Thor CPU) the same pattern holds: FP32 p50 5.94 µs vs INT8 p50 8.79 µs, so INT8 is slower on the Thor CPU for a model this small (`reports/jetson_inference_benchmark.json`).
 - **No feature leakage** for the link-condition estimators: `fading_abs` and `fading_phase` are saved in the dataset CSV as labels but excluded from `FEATURE_COLUMNS` in `ai_link_estimation/features.py`. They encode oracle channel knowledge and would trivially inflate any classifier built on them — a non-negotiable project rule.
 - **Two-pass channel verification.** A bug in earlier revisions had `add_awgn` referencing noise to received power instead of transmit power, making the Rayleigh penalty cancel out at the receiver. Caught by ensemble measurement, fixed (`add_awgn` gained an optional `reference_power`, `apply_channel` now passes pre-fading transmit power), and verified with a regression gate: `reports/ber_smoke_awgn.csv` must regenerate bit-identically.
 - **CI runs on Python 3.11 AND 3.12.** Most portfolio repos pin one version; this one validates both, including the PyTorch + ONNX + INT8 quantisation pipeline.
@@ -76,7 +76,7 @@ If you are evaluating physical-layer ML engineering: these are the signals that 
 
 **Implemented:** Python · NumPy · SciPy · scikit-learn · matplotlib · ONNX export · BER analysis · permutation-aware feature design
 
-**Optional extension:** Jetson ONNX Runtime latency benchmarking (template ready, hardware not yet measured)
+**Optional extension:** Jetson ONNX Runtime latency benchmarking (measured on the Thor CPU; CUDA / TensorRT execution providers not yet exercised)
 
 <p>
   <img src="https://img.shields.io/badge/Python-3.11%20%7C%203.12-blue" alt="Python" />
@@ -84,7 +84,7 @@ If you are evaluating physical-layer ML engineering: these are the signals that 
   <img src="https://img.shields.io/badge/SciPy-signal%20processing-8CAAE6" alt="SciPy" />
   <img src="https://img.shields.io/badge/scikit--learn-link%20estimators-F7931E" alt="scikit-learn" />
   <img src="https://img.shields.io/badge/ONNX-edge%20export-005CED" alt="ONNX" />
-  <img src="https://img.shields.io/badge/Jetson-benchmark%20template-76B900" alt="Jetson benchmark template" />
+  <img src="https://img.shields.io/badge/Jetson%20AGX%20Thor-latency%20measured%20(CPU%20EP)-76B900" alt="Jetson AGX Thor latency measured (CPU execution provider)" />
 </p>
 
 ---
@@ -99,7 +99,7 @@ If you are evaluating physical-layer ML engineering: these are the signals that 
 | **Link-condition dataset** | Synthetic CSV (`data/link_conditions.csv`) with 12 constellation statistics + 4 labels (SNR, BER, channel type, link-quality score). |
 | **ML link estimators** | Four scikit-learn estimators: SNR regressor (R² 0.687), BER regressor (R² 0.916), channel-type classifier (acc 0.552, disclosed weak), link-quality scorer (R² 0.768). |
 | **ONNX export** | Each `.joblib` estimator converts to ONNX via `skl2onnx`. Output models live under `models/onnx/` (gitignored). |
-| **Edge benchmark template** | `edge/jetson_benchmark_template.py` runs `onnxruntime` on any host; designed to drop onto a Jetson and emit latency p50/p95/p99 into `reports/jetson_inference_benchmark.json`; not yet run on the Thor. |
+| **Edge benchmark template** | `edge/jetson_benchmark_template.py` runs `onnxruntime` on any host; run on the Jetson AGX Thor with ONNX Runtime 1.30 `CPUExecutionProvider` (the installed `onnxruntime` wheel exposes no CUDA or TensorRT provider); results in `reports/jetson_inference_benchmark.json`, summarised in [Measured Metrics](#measured-metrics). |
 | **Reports** | BER CSVs + SVGs, model metrics JSON, plain-text link-estimation report, single-page HTML executive dashboard. |
 
 ---
@@ -118,7 +118,7 @@ Source: [`reports/link_estimation_metrics.json`](reports/link_estimation_metrics
 | AWGN BER full sweep (1 000 000 bits) | 2.42e-3 @ 0 dB · 1.83e-4 @ 2 dB · 5.0e-6 @ 4 dB · 0 @ 6–20 dB (below 1e-6 sim floor) | measured ([reports/ber_full_awgn.csv](reports/ber_full_awgn.csv)) — `make run-sim-full` |
 | Rayleigh BER smoke (2 000 bits, single fading realization, seed=7) | 4.8e-2 @ 0 dB · 0 @ 2–20 dB | measured ([reports/ber_smoke_rayleigh.csv](reports/ber_smoke_rayleigh.csv)) — `make run-sim-rayleigh`. **Single-realization caveat — see note below.** |
 | Ensemble-averaged Rayleigh BER (N=200 realizations × 10 000 bits, transmit-power-SNR) | 4.18e-2 @ 0 dB · 4.70e-2 @ 2 dB · 2.67e-2 @ 4 dB · 1.24e-2 @ 6 dB · 8.3e-3 @ 8 dB · 7.7e-3 @ 10 dB · 5.8e-3 @ 12 dB · 3.6e-3 @ 14 dB · 2.6e-4 @ 16 dB · 2.9e-3 @ 18 dB · 5.2e-4 @ 20 dB | measured ([reports/ber_full_rayleigh.csv](reports/ber_full_rayleigh.csv)) — `make run-sim-rayleigh-full`. Classical 1/SNR diversity-1 penalty visible vs AWGN's exponential decay |
-| Jetson ONNX inference latency (p50/p95/p99) | `<TO MEASURE>` | Plan: run `edge/jetson_benchmark_template.py` on the Jetson AGX Thor; capture mean latency and inferences/sec into `reports/jetson_inference_benchmark.json` |
+| Jetson AGX Thor ONNX inference latency (p50/p95/p99; ONNX Runtime `CPUExecutionProvider`, batch 1, 5 000 timed runs after 200 warm-up) | FP32: 5.94 / 6.07 / 6.95 µs, 166,814 inferences/s · INT8: 8.79 / 9.31 / 10.41 µs, 99,637 inferences/s | measured ([reports/jetson_inference_benchmark.json](reports/jetson_inference_benchmark.json)) — Thor CPU only; no CUDA or TensorRT execution provider was available in the installed `onnxruntime` wheel, so this is not a GPU or TensorRT number |
 
 **Correction, 2026-10-04.** These estimators previously showed SNR R² 0.999 (MAE 0.118 dB). Those numbers were generated on 2026-05-17, before the 2026-05-18 channel fix that references noise to transmit power instead of the faded signal. The old model normalized fading away, which made SNR nearly trivial to read from the constellation. With the corrected channel, SNR error on Rayleigh links is about 2.5× the AWGN error, and the evidence above is regenerated from the current code.
 
@@ -154,7 +154,7 @@ flowchart LR
     G --> H["Classical BER vs SNR curve<br/>textbook verification"]
     G --> I["ML link estimators<br/>SNR / BER / channel / quality"]
     I --> J["ONNX export"]
-    J --> K["Jetson benchmark template<br/>latency p50 / p95 / p99"]
+    J --> K["Jetson AGX Thor benchmark<br/>measured p50 / p95 / p99 (CPU EP)"]
     G --> L["Static dashboard<br/>operator engineering readout"]
 ```
 
@@ -293,10 +293,10 @@ python export_onnx.py
 Benchmark on Jetson (or any host with `onnxruntime`):
 
 ```bash
-python edge/jetson_benchmark_template.py --model models/onnx/snr_estimator.onnx --runs 1000
+python edge/jetson_benchmark_template.py --runs 5000 --warmup 200 --output reports/jetson_inference_benchmark.json
 ```
 
-See [`reports/edge_inference_plan.md`](reports/edge_inference_plan.md) for TensorRT-ready notes. The current ONNX path is a practical edge inference bridge for the tabular estimators. For TensorRT acceleration, the tree-based estimators would need to be distilled into a small neural network and validated for parity across Python, ONNX Runtime, and TensorRT — a known scope expansion, intentionally deferred until the ONNX latency is measured on the Thor.
+See [`reports/edge_inference_plan.md`](reports/edge_inference_plan.md) for TensorRT-ready notes. The current ONNX path is a practical edge inference bridge for the tabular estimators. For TensorRT acceleration, the tree-based estimators would need to be distilled into a small neural network and validated for parity across Python, ONNX Runtime, and TensorRT — a known scope expansion, intentionally deferred: the measured Thor CPU latency (FP32 p50 5.94 µs, INT8 p50 8.79 µs in `reports/jetson_inference_benchmark.json`) does not yet justify it.
 
 For the reviewer-facing checklist see [PORTFOLIO_DELIVERABLES.md](PORTFOLIO_DELIVERABLES.md). For the executive one-pager see [TECH_BRIEF.md](TECH_BRIEF.md).
 
@@ -311,7 +311,7 @@ This repository is a **production-discipline reference** for physical-layer AI e
 - a standards-compliant modem
 - a production telecom receiver
 
-What it is: a measurable QPSK simulation testbed with verified BER curves, an ML link-estimation layer with honest holdout evaluation, and an ONNX export path validated end-to-end on commodity hardware (Jetson latency `<TO MEASURE>` until it is run on the Thor).
+What it is: a measurable QPSK simulation testbed with verified BER curves, an ML link-estimation layer with honest holdout evaluation, and an ONNX export path validated end-to-end on commodity hardware (Jetson AGX Thor latency measured on the Thor CPU with ONNX Runtime, see [Measured Metrics](#measured-metrics)).
 
 The methodology — classical baseline first, ML second, edge path third, honest weak results surfaced — applies beyond QPSK to any physical-layer AI work.
 

@@ -78,8 +78,8 @@ def _interpretation(fp32: dict[str, float], int8: dict[str, float]) -> str:
     return (
         f"Measured in this run on CPU: INT8 is {size_ratio:.2f}x smaller and "
         f"{speed} per sample compared with FP32 ONNX, with an MAE change of "
-        f"{drift:+.4f} dB on the holdout. Jetson latency is not measured yet "
-        "(recipe in JETSON_BENCHMARK_GUIDE.md)."
+        f"{drift:+.4f} dB on the holdout. Jetson AGX Thor latency is reported "
+        "separately in reports/jetson_inference_benchmark.json."
     )
 
 
