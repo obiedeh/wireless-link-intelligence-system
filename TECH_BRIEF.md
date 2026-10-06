@@ -8,7 +8,7 @@ A one-page brief for a senior tech-leader or hiring-manager review. Read this if
 
 Physical-layer AI sits between two failure modes. Skip the signal-processing work and you publish ML wins that vanish the moment they meet a real channel. Skip the engineering discipline and you publish notebook-only experiments that no RF team can reproduce or trust.
 
-This repo demonstrates the engineering pattern that avoids both: **classical baseline first** (verified BER curves matching textbook predictions), **ML estimators second** (with honest holdout metrics and disclosed weaknesses), **edge deployment path third** (ONNX export + Jetson benchmark template, ready when hardware lands).
+This repo demonstrates the engineering pattern that avoids both: **classical baseline first** (verified BER curves matching textbook predictions), **ML estimators second** (with honest holdout metrics and disclosed weaknesses), **edge deployment path third** (ONNX export + Jetson benchmark template, not yet run on the Thor).
 
 In one sentence: a classical QPSK baseband simulator with deterministic BER vs SNR sweeps, four scikit-learn link estimators evaluated on a held-out split, and an ONNX export path validated end-to-end on commodity hardware — every committed number regenerable by `make verify`.
 
@@ -24,7 +24,7 @@ It is **not** a production telecom receiver, not a full AI-RAN base station, not
 | **3GPP TR 38.901 channels** | TDL-A / TDL-B / TDL-C NLOS — ensemble BLER on 80 realisations × 4 096 bits | [`reports/bler_full_tdl_ofdm.csv`](reports/bler_full_tdl_ofdm.csv) |
 | **Channel estimation comparison** | LS / MMSE / Neural (PyTorch MLP) on TDL-C — neural wins at low SNR | [`reports/channel_estimation_comparison.csv`](reports/channel_estimation_comparison.csv) |
 | **INT8 quantization pipeline** | PyTorch → FP32 ONNX → INT8 ONNX · 1.92× smaller · +0.003 dB drift · no consistent CPU speedup at this size | [`reports/snr_quantization_comparison.json`](reports/snr_quantization_comparison.json) |
-| **Jetson AGX Thor latency p50/p95/p99** | benchmark hardware-ready | [`JETSON_BENCHMARK_GUIDE.md`](JETSON_BENCHMARK_GUIDE.md) |
+| **Jetson AGX Thor latency p50/p95/p99** | not yet measured | [`JETSON_BENCHMARK_GUIDE.md`](JETSON_BENCHMARK_GUIDE.md) |
 | AWGN BER full sweep (1M bits, single-carrier) | 2.42e-3 @ 0 dB → 1.83e-4 @ 2 dB → below 1e-6 sim floor at 6+ dB | [`reports/ber_full_awgn.csv`](reports/ber_full_awgn.csv) |
 | Ensemble-averaged Rayleigh BER (200 × 10k bits) | 4.18e-2 @ 0 dB → 5.2e-4 @ 20 dB *(diversity-1 visible)* | [`reports/ber_full_rayleigh.csv`](reports/ber_full_rayleigh.csv) |
 | SNR estimator MAE / R² (12 synthetic features) | 2.36 dB / **0.687** (AWGN 1.33, Rayleigh 3.30 dB) | [`reports/link_estimation_metrics.json`](reports/link_estimation_metrics.json) |
@@ -72,7 +72,7 @@ A **non-negotiable project rule** enforces no feature leakage: `fading_abs` and 
 - `onnxruntime` parity test passes on commodity x86_64 — predictions match the sklearn pipeline within float32 tolerance.
 
 **Not yet measured:**
-- **Jetson latency p50/p95/p99.** The benchmark template (`edge/jetson_benchmark_template.py`) runs on any host with `onnxruntime` installed; designed to drop onto a Jetson Orin/Nano and emit results into `reports/jetson_inference_benchmark.json`. The latency row in the metrics is `<TO MEASURE>` until hardware lands.
+- **Jetson latency p50/p95/p99.** The benchmark template (`edge/jetson_benchmark_template.py`) runs on any host with `onnxruntime` installed; designed to drop onto a Jetson AGX Thor or Orin and emit results into `reports/jetson_inference_benchmark.json`. The latency row in the metrics is `<TO MEASURE>` until it is run on the Thor.
 - **TensorRT acceleration.** Would require distilling the tree-based estimators into a small neural network and validating Python ↔ ONNX Runtime ↔ TensorRT parity. Known scope expansion, intentionally deferred until measured Jetson latency justifies the optimization.
 
 ---
@@ -103,7 +103,7 @@ Repo-quality signals:
 
 Honest list, in priority order:
 
-1. **Jetson hardware** to measure actual ONNX Runtime latency p50/p95/p99 and turn the `<TO MEASURE>` row into real numbers.
+1. **A measured run on the Jetson AGX Thor** for actual ONNX Runtime latency p50/p95/p99 and turn the `<TO MEASURE>` row into real numbers.
 2. **Higher-order temporal features** (envelope variance, autocorrelation over a sliding window) to fix the channel classifier weakness. The current 12-feature set is symbol-averaged; AWGN vs Rayleigh discrimination needs temporal structure.
 3. **TensorRT distillation** — convert tree models into a small neural network with validated parity across Python ↔ ONNX Runtime ↔ TensorRT. Worth doing only after Jetson latency justifies the optimization.
 4. **Real-world feature validation** — the synthetic dataset is exactly what its name says. A real RF environment introduces frequency offset, timing drift, multipath beyond flat Rayleigh, and impairments that need to be modeled or directly measured.

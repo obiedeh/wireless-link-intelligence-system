@@ -12,9 +12,9 @@ The deliverable is the engineering pattern, not a production receiver. Every BER
 
 AI-RAN and edge-AI wireless systems depend on a measurable physical layer. Most repos in this space either skip the signal-processing work (claim ML wins without showing the classical baseline) or skip the discipline (claim production-grade results from notebook-only experiments). Neither is a defensible engineering pattern.
 
-This repo demonstrates the engineering pattern that makes physical-layer ML credible: **classical baseline first** (verified BER curves matching textbook predictions), **ML estimators second** (with honest holdout metrics and disclosed weaknesses), **edge deployment path third** (ONNX export + Jetson benchmark template, ready when hardware lands).
+This repo demonstrates the engineering pattern that makes physical-layer ML credible: **classical baseline first** (verified BER curves matching textbook predictions), **ML estimators second** (with honest holdout metrics and disclosed weaknesses), **edge deployment path third** (ONNX export + Jetson benchmark template, not yet run on the Thor).
 
-**The discipline is the deliverable.** The QPSK math is textbook, the dataset is synthetic, the Jetson latency row is honest `<TO MEASURE>` until hardware arrives. What's defensible end-to-end is the methodology, the reproducibility, and the calibration of confidence.
+**The discipline is the deliverable.** The QPSK math is textbook, the dataset is synthetic, the Jetson latency row stays `<TO MEASURE>` until the benchmark is run on the Thor. What's defensible end-to-end is the methodology, the reproducibility, and the calibration of confidence.
 
 ---
 
@@ -26,7 +26,7 @@ This repo demonstrates the engineering pattern that makes physical-layer ML cred
 | **3GPP channel models** | TDL-A / TDL-B / TDL-C from TR 38.901 §7.7.2 | `qpsk_link/tdl_channel.py` · `reports/bler_full_tdl_ofdm.csv` |
 | **Channel estimation** | LS / MMSE / Neural (PyTorch) head-to-head on TDL-C — neural wins at low SNR | `qpsk_link/channel_estimation.py` · `reports/channel_estimation_comparison.csv` |
 | **Edge deployment** | PyTorch FP32 → ONNX FP32 → ONNX INT8 (dynamic PTQ), 1.92× smaller file, +0.003 dB MAE drift; no consistent CPU speedup at this model size (about 10 µs per sample) | `train_snr_torch.py` · `reports/snr_quantization_comparison.json` |
-| **Jetson AGX Thor** | benchmark template hardware-ready; run via `JETSON_BENCHMARK_GUIDE.md` | `edge/jetson_benchmark_template.py` |
+| **Jetson AGX Thor** | not yet measured; template ready, run via `JETSON_BENCHMARK_GUIDE.md` | `edge/jetson_benchmark_template.py` |
 | AWGN BER full sweep (1M bits) | 2.42e-3 @ 0 dB → 1.83e-4 @ 2 dB → below 1e-6 sim floor at 6+ dB | `reports/ber_full_awgn.csv` |
 | Ensemble Rayleigh BER (200 × 10k bits, transmit-power-SNR) | 4.18e-2 @ 0 dB → 5.2e-4 @ 20 dB | `reports/ber_full_rayleigh.csv` |
 | SNR estimator — MAE / R² (synthetic features) | 2.36 dB / **0.687** (AWGN 1.33 dB, Rayleigh 3.30 dB) | `reports/link_estimation_metrics.json` |
@@ -99,7 +99,7 @@ If you are evaluating physical-layer ML engineering: these are the signals that 
 | **Link-condition dataset** | Synthetic CSV (`data/link_conditions.csv`) with 12 constellation statistics + 4 labels (SNR, BER, channel type, link-quality score). |
 | **ML link estimators** | Four scikit-learn estimators: SNR regressor (R² 0.687), BER regressor (R² 0.916), channel-type classifier (acc 0.552, disclosed weak), link-quality scorer (R² 0.768). |
 | **ONNX export** | Each `.joblib` estimator converts to ONNX via `skl2onnx`. Output models live under `models/onnx/` (gitignored). |
-| **Edge benchmark template** | `edge/jetson_benchmark_template.py` runs `onnxruntime` on any host; designed to drop onto a Jetson and emit latency p50/p95/p99 into `reports/jetson_inference_benchmark.json` when hardware lands. |
+| **Edge benchmark template** | `edge/jetson_benchmark_template.py` runs `onnxruntime` on any host; designed to drop onto a Jetson and emit latency p50/p95/p99 into `reports/jetson_inference_benchmark.json`; not yet run on the Thor. |
 | **Reports** | BER CSVs + SVGs, model metrics JSON, plain-text link-estimation report, single-page HTML executive dashboard. |
 
 ---
@@ -118,7 +118,7 @@ Source: [`reports/link_estimation_metrics.json`](reports/link_estimation_metrics
 | AWGN BER full sweep (1 000 000 bits) | 2.42e-3 @ 0 dB · 1.83e-4 @ 2 dB · 5.0e-6 @ 4 dB · 0 @ 6–20 dB (below 1e-6 sim floor) | measured ([reports/ber_full_awgn.csv](reports/ber_full_awgn.csv)) — `make run-sim-full` |
 | Rayleigh BER smoke (2 000 bits, single fading realization, seed=7) | 4.8e-2 @ 0 dB · 0 @ 2–20 dB | measured ([reports/ber_smoke_rayleigh.csv](reports/ber_smoke_rayleigh.csv)) — `make run-sim-rayleigh`. **Single-realization caveat — see note below.** |
 | Ensemble-averaged Rayleigh BER (N=200 realizations × 10 000 bits, transmit-power-SNR) | 4.18e-2 @ 0 dB · 4.70e-2 @ 2 dB · 2.67e-2 @ 4 dB · 1.24e-2 @ 6 dB · 8.3e-3 @ 8 dB · 7.7e-3 @ 10 dB · 5.8e-3 @ 12 dB · 3.6e-3 @ 14 dB · 2.6e-4 @ 16 dB · 2.9e-3 @ 18 dB · 5.2e-4 @ 20 dB | measured ([reports/ber_full_rayleigh.csv](reports/ber_full_rayleigh.csv)) — `make run-sim-rayleigh-full`. Classical 1/SNR diversity-1 penalty visible vs AWGN's exponential decay |
-| Jetson ONNX inference latency (p50/p95/p99) | `<TO MEASURE>` | Plan: run `edge/jetson_benchmark_template.py` on Jetson when hardware lands; capture mean latency and inferences/sec into `reports/jetson_inference_benchmark.json` |
+| Jetson ONNX inference latency (p50/p95/p99) | `<TO MEASURE>` | Plan: run `edge/jetson_benchmark_template.py` on the Jetson AGX Thor; capture mean latency and inferences/sec into `reports/jetson_inference_benchmark.json` |
 
 **Correction, 2026-10-04.** These estimators previously showed SNR R² 0.999 (MAE 0.118 dB). Those numbers were generated on 2026-05-17, before the 2026-05-18 channel fix that references noise to transmit power instead of the faded signal. The old model normalized fading away, which made SNR nearly trivial to read from the constellation. With the corrected channel, SNR error on Rayleigh links is about 2.5× the AWGN error, and the evidence above is regenerated from the current code.
 
@@ -296,7 +296,7 @@ Benchmark on Jetson (or any host with `onnxruntime`):
 python edge/jetson_benchmark_template.py --model models/onnx/snr_estimator.onnx --runs 1000
 ```
 
-See [`reports/edge_inference_plan.md`](reports/edge_inference_plan.md) for TensorRT-ready notes. The current ONNX path is a practical edge inference bridge for the tabular estimators. For TensorRT acceleration, the tree-based estimators would need to be distilled into a small neural network and validated for parity across Python, ONNX Runtime, and TensorRT — a known scope expansion, intentionally deferred until Jetson hardware lands.
+See [`reports/edge_inference_plan.md`](reports/edge_inference_plan.md) for TensorRT-ready notes. The current ONNX path is a practical edge inference bridge for the tabular estimators. For TensorRT acceleration, the tree-based estimators would need to be distilled into a small neural network and validated for parity across Python, ONNX Runtime, and TensorRT — a known scope expansion, intentionally deferred until the ONNX latency is measured on the Thor.
 
 For the reviewer-facing checklist see [PORTFOLIO_DELIVERABLES.md](PORTFOLIO_DELIVERABLES.md). For the executive one-pager see [TECH_BRIEF.md](TECH_BRIEF.md).
 
@@ -311,7 +311,7 @@ This repository is a **production-discipline reference** for physical-layer AI e
 - a standards-compliant modem
 - a production telecom receiver
 
-What it is: a measurable QPSK simulation testbed with verified BER curves, an ML link-estimation layer with honest holdout evaluation, and an ONNX export path validated end-to-end on commodity hardware (Jetson latency `<TO MEASURE>` until the device lands).
+What it is: a measurable QPSK simulation testbed with verified BER curves, an ML link-estimation layer with honest holdout evaluation, and an ONNX export path validated end-to-end on commodity hardware (Jetson latency `<TO MEASURE>` until it is run on the Thor).
 
 The methodology — classical baseline first, ML second, edge path third, honest weak results surfaced — applies beyond QPSK to any physical-layer AI work.
 

@@ -76,13 +76,13 @@ Wrote benchmark results: reports/jetson_inference_benchmark.json
 
 The exact numbers will depend on your AGX Thor's power mode, JetPack version, and whether TensorRT EP is available. The script auto-detects providers in priority order: `TensorrtExecutionProvider` → `CUDAExecutionProvider` → `CPUExecutionProvider`.
 
-## Step 4 — Send the JSON back
+## Step 4: Commit the result
 
 ```bash
 cat reports/jetson_inference_benchmark.json
 ```
 
-Paste the contents into the next message and I'll commit it to `main`, update the dashboard so the `<TO MEASURE>` row becomes measured numbers, and update the README headline-evidence table accordingly.
+Commit the JSON, then run `make dashboard`: when `reports/jetson_inference_benchmark.json` exists, the dashboard replaces the `<TO MEASURE>` row with the measured numbers. Update the README headline-evidence table to match.
 
 ---
 

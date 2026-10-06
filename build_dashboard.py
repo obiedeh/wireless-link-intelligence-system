@@ -354,9 +354,9 @@ def _jetson_section_html(reports_dir: Path) -> str:
     if not path.exists():
         return """
     <section>
-      <h2>Jetson AGX Thor benchmark — hardware-ready</h2>
+      <h2>Jetson AGX Thor benchmark: pending run</h2>
       <div class="callout">
-        <strong>Pending measurement.</strong> The ONNX FP32 and INT8 models are exported, the benchmark template is ready, and the Jetson AGX Thor is in hand. Latency p50/p95/p99 will land here after a 30-second run on the device — see <a href="../JETSON_BENCHMARK_GUIDE.md"><code>JETSON_BENCHMARK_GUIDE.md</code></a> for the exact commands. Until then this row is honestly labelled <span class="sig">&lt;TO MEASURE&gt;</span>.
+        <strong>Pending measurement.</strong> The ONNX FP32 and INT8 models are exported, the benchmark template is ready, and the Jetson AGX Thor is in hand. Latency p50/p95/p99 will land here after a 30-second run on the device. See <a href="../JETSON_BENCHMARK_GUIDE.md"><code>JETSON_BENCHMARK_GUIDE.md</code></a> for the exact commands. Until then this row is labelled <span class="sig">&lt;TO MEASURE&gt;</span>.
       </div>
     </section>
     """
@@ -520,7 +520,7 @@ def build_dashboard(
         ),
         _kpi_card(
             "Jetson AGX Thor",
-            "Measured" if jetson_data else "Hardware-ready",
+            "Measured" if jetson_data else "Pending run",
             "FP32 + INT8 on actual device" if jetson_data else "ONNX + template ready · pending run",
             tone="" if jetson_data else "warn",
         ),
@@ -687,7 +687,7 @@ def build_dashboard(
 
     <section>
       <h2>Headline evidence</h2>
-      <p class="lede">Five KPIs at a glance — model quality, test coverage, and the honest disclosure that the channel classifier is weak on this feature set. Jetson latency is <strong>not yet measured</strong>; the benchmark template is ready when hardware lands.</p>
+      <p class="lede">Five KPIs at a glance — model quality, test coverage, and the honest disclosure that the channel classifier is weak on this feature set. Jetson latency is <strong>not yet measured</strong>; the benchmark template is ready to run on the Thor.</p>
       <div class="metrics">
         {''.join(kpi_cards)}
       </div>
@@ -785,7 +785,7 @@ def build_dashboard(
     <section>
       <h2>Limitations</h2>
       <div class="callout red">
-        <strong>What this is not:</strong> a production telecom receiver, an AI-RAN base station, a standards-compliant modem, or a scheduler. The ML dataset is synthetic. The Jetson row is <span class="sig">&lt;TO MEASURE&gt;</span> until hardware lands. The channel classifier's accuracy is close to the majority-class rate, disclosed as a calibrated weak result, not hidden behind aggregate numbers.
+        <strong>What this is not:</strong> a production telecom receiver, an AI-RAN base station, a standards-compliant modem, or a scheduler. The ML dataset is synthetic. The Jetson row is <span class="sig">&lt;TO MEASURE&gt;</span> until it is run on the Thor. The channel classifier's accuracy is close to the majority-class rate, disclosed as a calibrated weak result, not hidden behind aggregate numbers.
       </div>
     </section>
 

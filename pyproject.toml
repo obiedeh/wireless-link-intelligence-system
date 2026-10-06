@@ -7,6 +7,7 @@ name = "wireless-link-intelligence-system"
 version = "0.1.0"
 description = "Wireless Link Intelligence System. Production-discipline reference for physical-layer AI: classical QPSK baseband simulator with deterministic BER sweeps, ML link estimators on a held-out split, ONNX export, and a Jetson benchmark template."
 requires-python = ">=3.11"
+license = {text = "MIT"}
 dependencies = [
     "numpy>=1.26",
     "scipy>=1.10",
