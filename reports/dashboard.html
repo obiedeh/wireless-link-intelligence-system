@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Wireless Link Intelligence System — Evidence Pack</title>
+  <title>Wireless Link Intelligence System , Evidence Pack</title>
   <style>
     :root {
       --ink: #eef1e8; --muted: #a3aa9c; --line: #393d3f;
@@ -100,7 +100,7 @@ body{margin:0}
 
     <section>
       <h2>Headline evidence</h2>
-      <p class="lede">Five KPIs at a glance — model quality, test coverage, and the honest disclosure that the channel classifier is weak on this feature set. Jetson AGX Thor latency is <strong>measured</strong> (ONNX Runtime CPU execution provider; see the Jetson section).</p>
+      <p class="lede">Five KPIs at a glance , model quality, test coverage, and the honest disclosure that the channel classifier is weak on this feature set. Jetson AGX Thor latency is <strong>measured</strong> (ONNX Runtime CPU execution provider; see the Jetson section).</p>
       <div class="metrics">
         <article class="metric-card "><span>Adaptive QAM</span><strong>4 / 16 / 64 / 256</strong><small>CP-OFDM, Gray-coded square QAM, BER vs SNR matches textbook</small></article><article class="metric-card "><span>3GPP TR 38.901 channels</span><strong>TDL-A / B / C</strong><small>Ensemble BLER on N=80 realisations × 4096 bits per point</small></article><article class="metric-card money"><span>Neural channel estimator</span><strong>Wins at low SNR</strong><small>DeepRx-pattern MLP on TDL-C · LS / MMSE / Neural compared</small></article><article class="metric-card "><span>INT8 quantization</span><strong>~1.0× speedup</strong><small>Dynamic PTQ on ONNX · &lt;0.01 dB drift · smaller file</small></article><article class="metric-card "><span>Jetson AGX Thor</span><strong>Measured</strong><small>FP32 + INT8 on actual device</small></article>
       </div>
@@ -147,9 +147,9 @@ body{margin:0}
           <tr><th>PHY modem</th><td>CP-OFDM, 64 subcarriers, CP=16, Gray-coded square QAM (M = 4 / 16 / 64 / 256)</td></tr>
 <tr><th>Channel models</th><td>3GPP TR 38.901 TDL-A / TDL-B / TDL-C (Tables 7.7.2-1/2/3, NLOS multi-tap, ensemble-averaged Rayleigh)</td></tr>
 <tr><th>Single-carrier baseline</th><td>QPSK over AWGN (1M bits) + flat Rayleigh ensemble (N=200 × 10k bits)</td></tr>
-<tr><th>Channel convention</th><td>Transmit-power-SNR — verified (|h|² fade penalty does not cancel out)</td></tr>
-<tr><th>Channel estimation</th><td>Pilot-based — LS / MMSE (exponential PDP prior) / Neural (PyTorch MLP) compared head-to-head on TDL-C</td></tr>
-<tr><th>Link-estimation ML dataset</th><td>Synthetic 12-feature CSV — 500 samples, 125 random holdout (no oracle leakage; enforced as a hard project rule)</td></tr>
+<tr><th>Channel convention</th><td>Transmit-power-SNR , verified (|h|² fade penalty does not cancel out)</td></tr>
+<tr><th>Channel estimation</th><td>Pilot-based , LS / MMSE (exponential PDP prior) / Neural (PyTorch MLP) compared head-to-head on TDL-C</td></tr>
+<tr><th>Link-estimation ML dataset</th><td>Synthetic 12-feature CSV , 500 samples, 125 random holdout (no oracle leakage; enforced as a hard project rule)</td></tr>
 <tr><th>Edge deployment</th><td>PyTorch → FP32 ONNX → INT8 ONNX (dynamic PTQ via onnxruntime.quantization)</td></tr>
 <tr><th>Validation harness</th><td>77 pytest tests, ruff lint, CI matrix on Python 3.11 + 3.12</td></tr>
         </tbody></table>
@@ -158,8 +158,8 @@ body{margin:0}
 
     
     <section>
-      <h2>Adaptive QAM — CP-OFDM BER vs SNR (AWGN)</h2>
-      <p class="lede">QPSK / 16-QAM / 64-QAM / 256-QAM on a 64-subcarrier CP-OFDM modem. Same Gray-coded square constellation logic across all four orders, normalised to unit average symbol energy. The curves below match textbook 5G NR link-adaptation tables — what a scheduler reads to pick MCS from CQI feedback.</p>
+      <h2>Adaptive QAM , CP-OFDM BER vs SNR (AWGN)</h2>
+      <p class="lede">QPSK / 16-QAM / 64-QAM / 256-QAM on a 64-subcarrier CP-OFDM modem. Same Gray-coded square constellation logic across all four orders, normalised to unit average symbol energy. The curves below match textbook 5G NR link-adaptation tables , what a scheduler reads to pick MCS from CQI feedback.</p>
       <p class="readout"><strong>Engineering readout:</strong> Adaptive modulation behaves as expected: QPSK is robust at low SNR, while 64/256-QAM need much cleaner channels. That makes this section the link-adaptation baseline, not a claim about production NR scheduling.</p>
       <div class="grid">
         <div class="panel"><img src="ber_full_ofdm_awgn.svg" alt="Adaptive QAM BER vs SNR" /></div>
@@ -177,8 +177,8 @@ body{margin:0}
 
     
     <section>
-      <h2>3GPP TR 38.901 TDL channel BLER — perfect-CSI receiver</h2>
-      <p class="lede">Ensemble-averaged frame error rate under TDL-A / TDL-B / TDL-C (NLOS multi-tap fading from <em>TR 38.901 §7.7.2</em>). Each (profile, SNR) point averages 80 independent channel realisations × 4096 bits with perfect channel-state information at the receiver. BLER pinned at 1.0 below 12 dB and only 10–20 % at 30 dB is the honest diversity-1 multipath result — exactly why real 5G uses LDPC + HARQ + MIMO on top.</p>
+      <h2>3GPP TR 38.901 TDL channel BLER , perfect-CSI receiver</h2>
+      <p class="lede">Ensemble-averaged frame error rate under TDL-A / TDL-B / TDL-C (NLOS multi-tap fading from <em>TR 38.901 §7.7.2</em>). Each (profile, SNR) point averages 80 independent channel realisations × 4096 bits with perfect channel-state information at the receiver. BLER pinned at 1.0 below 12 dB and only 10–20 % at 30 dB is the honest diversity-1 multipath result , exactly why real 5G uses LDPC + HARQ + MIMO on top.</p>
       <div class="grid">
         <div class="panel"><img src="bler_full_tdl_ofdm.svg" alt="TDL channel BLER curves" /></div>
         <div class="panel">
@@ -195,8 +195,8 @@ body{margin:0}
 
     
     <section>
-      <h2>Pilot-based channel estimation — LS vs MMSE vs Neural (TDL-C)</h2>
-      <p class="lede">All three estimators see the same TDL-C realisations and the same noisy received pilots (comb stride 4). The neural estimator is a small PyTorch MLP trained on ~2,500 synthetic frames covering −5 to +30 dB. Reading: neural wins at low SNR (better denoising than linear interpolation or the closed-form MMSE prior), MMSE wins at high SNR (optimal given known noise variance + delay-profile prior), LS lags everywhere. This is the textbook AI-PHY trade-off — surfaced, not polished away.</p>
+      <h2>Pilot-based channel estimation , LS vs MMSE vs Neural (TDL-C)</h2>
+      <p class="lede">All three estimators see the same TDL-C realisations and the same noisy received pilots (comb stride 4). The neural estimator is a small PyTorch MLP trained on ~2,500 synthetic frames covering −5 to +30 dB. Reading: neural wins at low SNR (better denoising than linear interpolation or the closed-form MMSE prior), MMSE wins at high SNR (optimal given known noise variance + delay-profile prior), LS lags everywhere. This is the textbook AI-PHY trade-off , surfaced, not polished away.</p>
       <div class="grid">
         <div class="panel"><img src="channel_estimation_comparison.svg" alt="LS vs MMSE vs Neural channel estimation" /></div>
         <div class="panel">
@@ -205,7 +205,7 @@ body{margin:0}
             <thead><tr><th>Estimator</th><th>0 dB</th><th>6 dB</th><th>12 dB</th><th>18 dB</th><th>24 dB</th><th>30 dB</th></tr></thead>
             <tbody><tr><td><strong>LS</strong></td><td>2.466e-01</td><td>9.523e-02</td><td>6.518e-02</td><td>5.545e-02</td><td>5.656e-02</td><td>5.936e-02</td></tr><tr><td><strong>MMSE</strong></td><td>1.767e-01</td><td>4.407e-02</td><td>1.363e-02</td><td>3.510e-03</td><td>8.288e-04</td><td>2.356e-04</td></tr><tr><td><strong>Neural</strong></td><td>9.151e-02</td><td>2.933e-02</td><td>1.282e-02</td><td>7.269e-03</td><td>6.339e-03</td><td>8.354e-03</td></tr></tbody>
           </table>
-          <p class="lede" style="margin-top:8px;">The left plot shows both MSE and resulting BLER side-by-side. Neural is competitive vs MMSE without needing the noise-variance / delay-spread priors — that's the DeepRx-pattern signal: a learned estimator that closes the gap to the analytical optimum.</p>
+          <p class="lede" style="margin-top:8px;">The left plot shows both MSE and resulting BLER side-by-side. Neural is competitive vs MMSE without needing the noise-variance / delay-spread priors , that's the DeepRx-pattern signal: a learned estimator that closes the gap to the analytical optimum.</p>
         </div>
       </div>
     </section>
@@ -219,8 +219,8 @@ body{margin:0}
         <table>
           <thead><tr><th>Form</th><th>Holdout MAE (dB)</th><th>File size</th><th>CPU latency (µs / sample)</th></tr></thead>
           <tbody>
-            <tr><td><strong>sklearn baseline</strong></td><td>1.2932 dB</td><td>—</td><td>—</td></tr>
-            <tr><td><strong>PyTorch FP32</strong></td><td>2.3267 dB</td><td>—</td><td>(in-memory)</td></tr>
+            <tr><td><strong>sklearn baseline</strong></td><td>1.2932 dB</td><td>,</td><td>,</td></tr>
+            <tr><td><strong>PyTorch FP32</strong></td><td>2.3267 dB</td><td>,</td><td>(in-memory)</td></tr>
             <tr><td><strong>ONNX FP32</strong></td><td>2.3267 dB</td><td>12,445 B</td><td>9.77</td></tr>
             <tr><td><strong>ONNX INT8 (dyn PTQ)</strong></td><td>2.3300 dB</td><td>6,487 B</td><td>9.50</td></tr>
           </tbody>
@@ -232,7 +232,7 @@ body{margin:0}
 
     
     <section>
-      <h2>Jetson AGX Thor benchmark — measured</h2>
+      <h2>Jetson AGX Thor benchmark , measured</h2>
       <p class="lede">Latency p50/p95/p99 (tail-aware, not just mean) and throughput on the actual device for both FP32 and INT8 ONNX models. Provider auto-selected in priority order TensorRT > CUDA > CPU; this run used <span class="sig">CPUExecutionProvider</span> (Thor CPU only; no CUDA or TensorRT execution provider was available, so this is not a GPU number).</p>
       <div class="panel">
         <table>
@@ -249,11 +249,11 @@ body{margin:0}
     
 
     <section>
-      <h2>BER vs SNR — single-carrier QPSK baseline</h2>
+      <h2>BER vs SNR , single-carrier QPSK baseline</h2>
       <p class="lede">AWGN: 1M-bit deterministic sweep. Rayleigh: ensemble-averaged N=200 realizations × 10,000 bits per SNR point, using the transmit-power-SNR convention so the diversity-1 penalty is visible (BER falls roughly as 1/SNR_linear), not cancelled by the <em>|h|²</em> factor at the receiver.</p>
       <div class="grid">
         <div class="panel">
-          <h3>AWGN — full sweep (1M bits)</h3>
+          <h3>AWGN , full sweep (1M bits)</h3>
           <img src="ber_full_awgn.svg" alt="AWGN BER curve, 1 million bits per SNR point" />
           <table style="margin-top: 10px;">
             <thead><tr><th>SNR</th><th>BER</th></tr></thead>
@@ -268,7 +268,7 @@ body{margin:0}
           </table>
         </div>
         <div class="panel">
-          <h3>Rayleigh — ensemble averaged (N=200 × 10k bits)</h3>
+          <h3>Rayleigh , ensemble averaged (N=200 × 10k bits)</h3>
           <img src="ber_full_rayleigh.svg" alt="Rayleigh BER ensemble curve, 200 realizations" />
           <table style="margin-top: 10px;">
             <thead><tr><th>SNR</th><th>Avg BER</th></tr></thead>
@@ -286,8 +286,8 @@ body{margin:0}
     </section>
 
     <section>
-      <h2>ML link estimators — holdout performance</h2>
-      <p class="lede">Four estimators trained on the synthetic link-condition CSV with a 25% random holdout. The channel classifier's weak accuracy is reported, not hidden — see the per-estimator interpretation below.</p>
+      <h2>ML link estimators , holdout performance</h2>
+      <p class="lede">Four estimators trained on the synthetic link-condition CSV with a 25% random holdout. The channel classifier's weak accuracy is reported, not hidden , see the per-estimator interpretation below.</p>
       <div class="panel">
         <table><thead><tr><th>Estimator</th><th>Primary metric</th><th>Secondary</th></tr></thead>
           <tbody><tr><td><strong>SNR estimator</strong></td><td>R² 0.687</td><td>MAE 2.3556</td></tr>
@@ -299,12 +299,12 @@ body{margin:0}
     </section>
 
     <section>
-      <h2>What each estimator is doing — and where it fails</h2>
+      <h2>What each estimator is doing , and where it fails</h2>
       <p class="lede">Per-estimator interpretation in plain English. Each card includes the calibrated finding (what this model captures, why, and where the boundary is).</p>
       <div class="grid">
         <article class="reason-card"><div class="reason-head"><strong>SNR estimator</strong><span>R² 0.687</span></div><p>On AWGN links, constellation power and spread track SNR closely. Rayleigh fading scales the constellation, and symbol-averaged statistics cannot fully separate a deep fade from low SNR, so error on faded links is much larger. An earlier channel model normalized fading away and made this look nearly perfect (R² 0.999); the corrected model is the honest number.</p></article>
 <article class="reason-card"><div class="reason-head"><strong>BER predictor</strong><span>R² 0.916</span></div><p>BER follows from SNR via the Q-function in theory, but at low SNR the constellation spread carries information the textbook formula misses. Predicting measured BER from constellation statistics tracks the trend, but its error sits above the simulation&#x27;s measurement resolution, so it is a rough estimate, not a substitute for the measured BER.</p></article>
-<article class="reason-card"><div class="reason-head"><strong>Channel classifier</strong><span>acc 0.552</span></div><p>Honest weak result. AWGN and Rayleigh produce similar constellation statistics when averaged over symbols — distinguishing them needs higher-order features (envelope variance over time, autocorrelation) the current 12-feature set does not have. Accuracy close to the majority-class rate is the calibrated signal that this task wants a different feature design; surfaced rather than hidden.</p></article>
+<article class="reason-card"><div class="reason-head"><strong>Channel classifier</strong><span>acc 0.552</span></div><p>Honest weak result. AWGN and Rayleigh produce similar constellation statistics when averaged over symbols , distinguishing them needs higher-order features (envelope variance over time, autocorrelation) the current 12-feature set does not have. Accuracy close to the majority-class rate is the calibrated signal that this task wants a different feature design; surfaced rather than hidden.</p></article>
 <article class="reason-card"><div class="reason-head"><strong>Link-quality scorer</strong><span>R² 0.768</span></div><p>The 0–100 link-quality target combines SNR and BER with a small Rayleigh penalty. The model inherits the SNR estimator&#x27;s limits on faded links, so it is more a consistency check than a new capability.</p></article>
       </div>
     </section>

@@ -1,6 +1,6 @@
-# Portfolio Deliverables — Wireless Link Intelligence System
+# Portfolio Deliverables , Wireless Link Intelligence System
 
-Production-discipline reference for physical-layer AI: a classical QPSK simulator with deterministic BER sweeps, four ML link estimators with honest holdout evaluation, and an ONNX export path validated against a Jetson benchmark template. All scoped to a measurable testbed — not a production receiver.
+Production-discipline reference for physical-layer AI: a classical QPSK simulator with deterministic BER sweeps, four ML link estimators with honest holdout evaluation, and an ONNX export path validated against a Jetson benchmark template. All scoped to a measurable testbed , not a production receiver.
 
 ## One-Command Checks
 
@@ -34,6 +34,6 @@ Generated training data and model binaries are intentionally not committed. They
 
 This is not a production modem, AI-RAN base station, scheduler, or standards-compliant receiver. It is a measurable simulation testbed and edge-inference preparation repo.
 
-Jetson evidence is a measured ONNX Runtime run on the Jetson AGX Thor CPU (`CPUExecutionProvider`, `reports/jetson_inference_benchmark.json`); no GPU or TensorRT latency has been measured. The classifier accuracy result (0.552 against a 0.520 majority-class rate) is the calibrated finding that the current 12-feature set carries little channel-type signal — surfaced, not hidden.
+Jetson evidence is a measured ONNX Runtime run on the Jetson AGX Thor CPU (`CPUExecutionProvider`, `reports/jetson_inference_benchmark.json`); no GPU or TensorRT latency has been measured. The classifier accuracy result (0.552 against a 0.520 majority-class rate) is the calibrated finding that the current 12-feature set carries little channel-type signal , surfaced, not hidden.
 
 See [TECH_BRIEF.md](TECH_BRIEF.md) for the one-page hiring-manager summary.
